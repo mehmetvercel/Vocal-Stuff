@@ -245,29 +245,31 @@
 if (SpeechRecognition) {
   const boxes = document.querySelectorAll('.box');
 
-  boxes.forEach((box, idx) => {
+  boxes.forEach((box) => {
+  box.addEventListener('click', () => {
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
-    box.addEventListener('click', () => {
-      box.textContent = "Listening...";
-      recognition.start();
+    let isResultReceived = false;
 
-      // Timeout fallback if browser misbehaves
-      setTimeout(() => {
-        if (box.textContent === "Listening...") {
-          box.textContent = "No input detected";
-          recognition.abort();
-        }
-      }, 6000); // 6 seconds max
-    });
+    box.textContent = "Listening...";
+    recognition.start();
+
+    const fallbackTimeout = setTimeout(() => {
+      if (!isResultReceived) {
+        recognition.abort();
+        box.textContent = "No input detected";
+      }
+    }, 6000);
 
     recognition.addEventListener('result', (event) => {
+      isResultReceived = true;
+      clearTimeout(fallbackTimeout);
       const transcript = event.results[0][0].transcript.trim().slice(0, 32);
       box.textContent = transcript || "Say Something";
-      console.log("Transcript:", transcript);
+      recognition.stop();
     });
 
     recognition.addEventListener('speechend', () => {
@@ -275,22 +277,27 @@ if (SpeechRecognition) {
     });
 
     recognition.addEventListener('error', (event) => {
+      clearTimeout(fallbackTimeout);
       console.error("Speech recognition error:", event.error);
       if (event.error === 'no-speech') {
         box.textContent = "Didn't catch that.";
       } else if (event.error === 'audio-capture') {
         box.textContent = "No mic found!";
+      } else if (event.error === 'not-allowed') {
+        box.textContent = "Mic permission denied!";
       } else {
         box.textContent = "Try Again";
       }
     });
 
     recognition.addEventListener('end', () => {
-      if (box.textContent === "Listening...") {
+      if (!isResultReceived && box.textContent === "Listening...") {
         box.textContent = "Say Something";
       }
     });
   });
+});
+
 } else {
   document.querySelectorAll('.box').forEach(box => {
     box.textContent = "Speech Not Supported";
