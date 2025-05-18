@@ -162,11 +162,15 @@
 
   <h1>Does Your Mic Work?</h1>
   <p id="subtext">Let's make sure your microphone is working properly</p>
+
   <button id="checkButton">Check</button>
 
   <div id="volume-meter" style="display: none;">
     <!-- 20 bars -->
-    ${'<div class="bar"></div>'.repeat(20)}
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
   </div>
 
   <div id="next-step">
@@ -250,7 +254,7 @@
       }
     });
 
-    function initSpeechRecognition(targetBox, textTarget) {
+    function initSpeechRecognition(targetBox, textTarget, isTicker = false) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) return;
 
@@ -264,22 +268,23 @@
       });
 
       recognition.onresult = (event) => {
-        const result = event.results[0][0].transcript.trim().slice(0, 32);
+        let result = event.results[0][0].transcript.trim();
+        if (isTicker) result = result.split(' ')[0]; // only first word
         textTarget.textContent = result || "N/A";
-        targetBox.textContent = result || targetBox.id.includes("coin") ? "Say A Token Name" : "Say A Ticker";
+        targetBox.textContent = result || (isTicker ? "Say A Ticker" : "Say A Token Name");
         checkFields();
       };
 
       recognition.onerror = () => targetBox.textContent = "Try Again";
       recognition.onend = () => {
         if (targetBox.textContent === "Listening...") {
-          targetBox.textContent = targetBox.id.includes("coin") ? "Say A Token Name" : "Say A Ticker";
+          targetBox.textContent = isTicker ? "Say A Ticker" : "Say A Token Name";
         }
       };
     }
 
-    initSpeechRecognition(coinBox, coinText);
-    initSpeechRecognition(tickerBox, tickerText);
+    initSpeechRecognition(coinBox, coinText, false);
+    initSpeechRecognition(tickerBox, tickerText, true);
 
     imageSelectBtn.addEventListener("click", () => imageInput.click());
     imageInput.addEventListener("change", () => {
@@ -294,48 +299,16 @@
       deployButton.disabled = !(coin !== "N/A" && ticker !== "N/A" && image);
     }
 
-    deployButton.addEventListener("click", async () => {
-      if (deployButton.disabled || deployButton.classList.contains("uploading")) return;
+    deployButton.addEventListener("click", () => {
+      if (deployButton.disabled) return;
 
       deployButton.textContent = "UPLOADING...";
-      deployButton.classList.add("uploading");
-      const formData = new FormData();
-      formData.append("file", imageInput.files[0]);
-      formData.append("name", coinText.textContent);
-      formData.append("symbol", tickerText.textContent);
-      formData.append("description", "This is a test token");
-      formData.append("twitter", "https://x.com/ponchokings3");
-      formData.append("telegram", "");
-      formData.append("website", "https://www.youtube.com/");
-      formData.append("showName", "true");
+      deployButton.disabled = true;
 
-      try {
-        const metadataRes = await fetch("https://pump.fun/api/ipfs", { method: "POST", body: formData });
-        const metadata = await metadataRes.json();
-        const mintPubkey = crypto.randomUUID(); // Replace with real mint from backend if needed
-
-        const result = await fetch("http://localhost:3001/api/create-token", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            mintPubkey,
-            name: metadata.metadata.name,
-            symbol: metadata.metadata.symbol,
-            uri: metadata.metadataUri
-          }),
-        });
-
-        if (result.ok) {
-          window.open(`https://pump.fun/coin/${mintPubkey}`, "_blank");
-          deployButton.textContent = "Deployed!";
-        } else {
-          deployButton.textContent = "Error!";
-        }
-      } catch (err) {
-        console.error(err);
-        deployButton.textContent = "Failed!";
-      }
-      deployButton.classList.remove("uploading");
+      setTimeout(() => {
+        deployButton.textContent = "UPLOADED";
+        window.open("https://x.com/", "_blank");
+      }, 3000);
     });
   </script>
 </body>
