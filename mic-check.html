@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Microphone Check</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: white;
+      color: black;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #background-waves {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .wave {
+      position: absolute;
+      bottom: 0;
+      width: 200%;
+      height: 100%;
+      opacity: 0.2;
+      animation: waveMotion 10s linear infinite;
+    }
+
+    .wave.wave2 { animation-duration: 15s; opacity: 0.15; }
+    .wave.wave3 { animation-duration: 20s; opacity: 0.1; }
+
+    @keyframes waveMotion {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      z-index: 1;
+    }
+
+    #subtext {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      z-index: 1;
+      transition: opacity 0.5s ease;
+    }
+
+    #volume-meter {
+      display: flex;
+      gap: 5px;
+      height: 30px;
+      margin-top: 20px;
+      z-index: 1;
+    }
+
+    .bar {
+  width: 10px;
+  height: 100%;
+  background-color: rgba(0, 255, 0, 0.1); /* initial green tone */
+  transition: background-color 0.1s, transform 0.1s ease-out;
+  border-radius: 3px;
+}
+
+
+    #checkButton {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      background-color: white;
+      border: 2px solid rgba(0, 255, 255, 0.7);
+      color: black;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 1;
+    }
+
+    #checkButton:hover {
+      background-color: rgba(0, 255, 255, 0.1);
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    }
+
+    #next-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      margin-top: 40px;
+      z-index: 1;
+    }
+
+    .box, #deployButton {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .box {
+      width: 200px;
+      height: 100px;
+      border: 2px dashed #00bcd4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      border-radius: 10px;
+      background-color: rgba(0, 255, 255, 0.05);
+      cursor: pointer; /* <- Make clickable */
+      text-align: center;
+      padding: 10px;
+    }
+
+    #deployButton {
+      padding: 12px 30px;
+      font-size: 1rem;
+      background-color: white;
+      border: 2px solid rgba(0, 255, 255, 0.7);
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    #deployButton:hover {
+      background-color: rgba(0, 255, 255, 0.1);
+    }
+
+    .fade-in {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="background-waves">
+    <svg class="wave wave1" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path fill="rgba(0, 255, 255, 0.3)" d="M0,160L80,186.7C160,213,320,267,480,266.7C640,267,800,213,960,186.7C1120,160,1280,160,1440,160L1440,320L0,320Z"></path>
+    </svg>
+    <svg class="wave wave2" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path fill="rgba(0, 255, 255, 0.3)" d="M0,160L80,186.7C160,213,320,267,480,266.7C640,267,800,213,960,186.7C1120,160,1280,160,1440,160L1440,320L0,320Z"></path>
+    </svg>
+    <svg class="wave wave3" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path fill="rgba(0, 255, 255, 0.3)" d="M0,160L80,186.7C160,213,320,267,480,266.7C640,267,800,213,960,186.7C1120,160,1280,160,1440,160L1440,320L0,320Z"></path>
+    </svg>
+  </div>
+
+  <h1>Does Your Mic Work?</h1>
+  <p id="subtext">Let's make sure your microphone is working properly</p>
+
+  <button id="checkButton">Check</button>
+
+  <div id="volume-meter" style="display: none;">
+    <!-- 20 bars -->
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+  </div>
+
+  <div id="next-step">
+    <div class="box">Say A Token Name</div>
+    <div class="box">Say A Ticker</div>
+    <div class="box">Drop An Image</div>
+    <button id="deployButton">Deploy</button>
+  </div>
+
+  <script>
+    const bars = document.querySelectorAll(".bar");
+    const meter = document.getElementById("volume-meter");
+    const checkButton = document.getElementById("checkButton");
+    const subtext = document.getElementById("subtext");
+    const nextStep = document.getElementById("next-step");
+    const nextElements = nextStep.children;
+    let micPassed = false;
+
+    checkButton.addEventListener("click", async () => {
+  checkButton.style.display = "none";
+  meter.style.display = "flex";
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const context = new AudioContext();
+    const source = context.createMediaStreamSource(stream);
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 128; // More responsive
+    source.connect(analyser);
+
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    function updateMeter() {
+      analyser.getByteFrequencyData(dataArray);
+
+      // Compute volume using root mean square for smoother responsiveness
+      const rms = Math.sqrt(dataArray.reduce((sum, val) => sum + val * val, 0) / dataArray.length);
+      const activeBars = Math.floor((rms / 255) * bars.length);
+
+      bars.forEach((bar, i) => {
+        if (i < activeBars) {
+          const intensity = 0.3 + (i / bars.length) * 0.7; // smoother gradient
+          bar.style.backgroundColor = `rgba(0, 255, 0, ${intensity})`; // green glow
+          bar.style.transform = `scaleY(${1 + intensity})`; // add vertical animation
+        } else {
+          bar.style.backgroundColor = `rgba(0, 255, 0, 0.05)`;
+          bar.style.transform = 'scaleY(1)';
+        }
+      });
+
+      if (rms > 30 && !micPassed) {
+        micPassed = true;
+        subtext.style.opacity = 0;
+        setTimeout(() => {
+          subtext.textContent = "Your Mic Works Great!";
+          subtext.style.opacity = 1;
+
+          Array.from(nextElements).forEach((el, i) => {
+            setTimeout(() => el.classList.add("fade-in"), 500 + i * 400);
+          });
+        }, 500);
+      }
+
+      requestAnimationFrame(updateMeter);
+    }
+
+    updateMeter();
+  } catch (e) {
+    alert("Microphone access denied. Please allow mic access to continue.");
+    checkButton.style.display = "block";
+    meter.style.display = "none";
+  }
+});
+
+
+    // 🔊 SPEECH RECOGNITION FOR TOKEN NAME
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognition) {
+  const boxes = document.querySelectorAll('.box');
+
+  boxes.forEach((box, idx) => {
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    box.addEventListener('click', () => {
+      box.textContent = "Listening...";
+      recognition.start();
+
+      // Timeout fallback if browser misbehaves
+      setTimeout(() => {
+        if (box.textContent === "Listening...") {
+          box.textContent = "No input detected";
+          recognition.abort();
+        }
+      }, 6000); // 6 seconds max
+    });
+
+    recognition.addEventListener('result', (event) => {
+      const transcript = event.results[0][0].transcript.trim().slice(0, 32);
+      box.textContent = transcript || "Say Something";
+      console.log("Transcript:", transcript);
+    });
+
+    recognition.addEventListener('speechend', () => {
+      recognition.stop();
+    });
+
+    recognition.addEventListener('error', (event) => {
+      console.error("Speech recognition error:", event.error);
+      if (event.error === 'no-speech') {
+        box.textContent = "Didn't catch that.";
+      } else if (event.error === 'audio-capture') {
+        box.textContent = "No mic found!";
+      } else {
+        box.textContent = "Try Again";
+      }
+    });
+
+    recognition.addEventListener('end', () => {
+      if (box.textContent === "Listening...") {
+        box.textContent = "Say Something";
+      }
+    });
+  });
+} else {
+  document.querySelectorAll('.box').forEach(box => {
+    box.textContent = "Speech Not Supported";
+  });
+}
+
+  </script>
+</body>
+</html>
