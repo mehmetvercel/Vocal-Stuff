@@ -2,94 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Speech to Text</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background-color: #f0f0f0;
+      margin-top: 100px;
     }
     button {
-      padding: 10px 20px;
-      font-size: 16px;
+      padding: 1em 2em;
+      font-size: 1.2em;
+      border: none;
+      border-radius: 5px;
       cursor: pointer;
     }
     #output {
-      margin-top: 20px;
-      font-size: 18px;
-      max-width: 600px;
+      margin-top: 2em;
+      font-size: 1.4em;
+      width: 80%;
       text-align: center;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      word-wrap: break-word;
     }
   </style>
 </head>
 <body>
-  <button id="toggleButton">Start Talking</button>
-  <div id="output">Your speech will appear here...</div>
+  <button id="recordBtn">🎤 Start Recording</button>
+  <div id="output">Say something...</div>
 
   <script>
-    const button = document.getElementById('toggleButton');
+    const recordBtn = document.getElementById('recordBtn');
     const output = document.getElementById('output');
 
     let recognition;
-    let recognizing = false;
+    let isRecording = false;
 
-    if ('webkitSpeechRecognition' in window) {
-      recognition = new webkitSpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.lang = 'en-US';
-
-      recognition.onstart = () => {
-        console.log('Speech recognition started.');
-      };
-
-      recognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript;
-        console.log('Transcript:', transcript);
-        output.textContent = transcript;
-      };
-
-      recognition.onerror = function(event) {
-        console.error('Speech recognition error:', event);
-        output.textContent = `Error occurred: ${event.error || 'unknown'}`;
-      };
-
-      recognition.onend = function() {
-        console.log('Speech recognition ended.');
-        recognizing = false;
-        button.textContent = 'Start Talking';
-      };
-
-      button.onclick = function() {
-        if (recognizing) {
-          recognition.stop();
-          recognizing = false;
-          button.textContent = 'Start Talking';
-        } else {
-          try {
-            recognition.start();
-            recognizing = true;
-            button.textContent = 'Stop Talking';
-            output.textContent = 'Listening...';
-          } catch (e) {
-            console.error('Recognition start error:', e);
-            output.textContent = 'Could not start recognition. Check console for errors.';
-          }
-        }
-      };
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Sorry, your browser does not support Speech Recognition. Try using Chrome.');
     } else {
-      output.textContent = 'Speech recognition not supported in this browser.';
-      button.disabled = true;
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        output.textContent = `You said: "${transcript}"`;
+      };
+
+      recognition.onerror = (event) => {
+        output.textContent = `Error: ${event.error}`;
+      };
+
+      recognition.onend = () => {
+        isRecording = false;
+        recordBtn.textContent = '🎤 Start Recording';
+      };
     }
+
+    recordBtn.addEventListener('click', () => {
+      if (isRecording) {
+        recognition.stop();
+      } else {
+        output.textContent = 'Listening...';
+        recognition.start();
+        isRecording = true;
+        recordBtn.textContent = '🛑 Stop Recording';
+      }
+    });
   </script>
 </body>
 </html>
