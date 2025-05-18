@@ -240,69 +240,55 @@
 
 
     // 🔊 SPEECH RECOGNITION FOR TOKEN NAME
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const boxes = document.querySelectorAll('.box');
 
 if (SpeechRecognition) {
-  const boxes = document.querySelectorAll('.box');
-
   boxes.forEach((box) => {
-  box.addEventListener('click', () => {
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-US';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
-    let isResultReceived = false;
+    let isListening = false;
+    let finalTranscript = "";
 
-    box.textContent = "Listening...";
-    recognition.start();
-
-    const fallbackTimeout = setTimeout(() => {
-      if (!isResultReceived) {
-        recognition.abort();
-        box.textContent = "No input detected";
+    box.addEventListener('click', () => {
+      if (!isListening) {
+        finalTranscript = "";
+        box.textContent = "Listening...";
+        recognition.start();
+        isListening = true;
+      } else {
+        recognition.stop();
+        isListening = false;
       }
-    }, 6000);
+    });
 
     recognition.addEventListener('result', (event) => {
-      isResultReceived = true;
-      clearTimeout(fallbackTimeout);
-      const transcript = event.results[0][0].transcript.trim().slice(0, 32);
-      box.textContent = transcript || "Say Something";
-      recognition.stop();
-    });
-
-    recognition.addEventListener('speechend', () => {
-      recognition.stop();
-    });
-
-    recognition.addEventListener('error', (event) => {
-      clearTimeout(fallbackTimeout);
-      console.error("Speech recognition error:", event.error);
-      if (event.error === 'no-speech') {
-        box.textContent = "Didn't catch that.";
-      } else if (event.error === 'audio-capture') {
-        box.textContent = "No mic found!";
-      } else if (event.error === 'not-allowed') {
-        box.textContent = "Mic permission denied!";
-      } else {
-        box.textContent = "Try Again";
-      }
+      finalTranscript = event.results[0][0].transcript.trim().slice(0, 32);
     });
 
     recognition.addEventListener('end', () => {
-      if (!isResultReceived && box.textContent === "Listening...") {
-        box.textContent = "Say Something";
+      if (!finalTranscript) {
+        box.textContent = "No input detected";
+      } else {
+        box.textContent = finalTranscript;
       }
+      isListening = false;
+    });
+
+    recognition.addEventListener('error', (event) => {
+      console.error("Speech recognition error:", event.error);
+      box.textContent = "Error: " + event.error;
+      isListening = false;
     });
   });
-});
-
 } else {
-  document.querySelectorAll('.box').forEach(box => {
+  boxes.forEach((box) => {
     box.textContent = "Speech Not Supported";
   });
 }
+
 
   </script>
 </body>
