@@ -300,16 +300,21 @@
     }
 
     deployButton.addEventListener("click", () => {
-      if (deployButton.disabled) return;
+    if (deployButton.disabled) return;
 
-      deployButton.textContent = "UPLOADING...";
-      deployButton.disabled = true;
+    deployButton.textContent = "UPLOADING...";
+    deployButton.disabled = true;
 
-      setTimeout(() => {
-        deployButton.textContent = "UPLOADED";
-        window.open("https://x.com/", "_blank");
-      }, 3000);
-    });
+    setTimeout(() => {
+      deployButton.textContent = "UPLOADED";
+
+      const ticker = tickerText.textContent.trim().replace(/\s+/g, '');
+      const tweet = `I just made a coin using @VoiceToCoin! Ticker: $${ticker}`;
+      const tweetURL = `https://x.com/compose/post?text=${encodeURIComponent(tweet)}`;
+
+      window.open(tweetURL, "_blank");
+    }, 3000);
+  });
   </script>
 </body>
 </html>
