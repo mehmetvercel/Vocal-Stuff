@@ -1,439 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VOICE TO PUMP.FUN COIN</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-  <script type="module">
-    import { VersionedTransaction, Connection, Keypair } from 'https://cdn.skypack.dev/@solana/web3.js';
-    import bs58 from 'https://cdn.skypack.dev/bs58';
-
-    const RPC_ENDPOINT = "https://api.mainnet-beta.solana.com/";
-    const web3Connection = new Connection(RPC_ENDPOINT, 'confirmed');
-
-    window.sendLocalCreateTx = async (coinName, ticker, imageFile) => {
-  const formData = new FormData();
-  formData.append("file", imageFile);
-  formData.append("name", coinName);
-  formData.append("symbol", ticker);
-  formData.append("description", "This is a test token");
-  formData.append("twitter", "https://x.com/ponchokings3");
-  formData.append("telegram", "");
-  formData.append("website", "https://www.youtube.com/");
-  formData.append("showName", "true");
-
-  const metadataResponse = await fetch("https://pump.fun/api/ipfs", {
-    method: "POST",
-    body: formData,
-  });
-
-  const metadataResponseJSON = await metadataResponse.json();
-
-  const mintKeypair = window.solanaWeb3.Keypair.generate();
-  const mintPubkey = mintKeypair.publicKey.toBase58();
-
-  const response = await fetch("http://localhost:3001/api/create-token", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      mintPubkey,
-      name: metadataResponseJSON.metadata.name,
-      symbol: metadataResponseJSON.metadata.symbol,
-      uri: metadataResponseJSON.metadataUri
-    }),
-  });
-
-  if (response.ok) {
-    const result = await response.json();
-    window.open(`https://pump.fun/coin/${mintPubkey}`, '_blank');
-  } else {
-    console.error("Token creation failed:", await response.text());
-  }
-};
-
-  </script>
+  <meta charset="UTF-8">
+  <title>Interactive Holographic Face</title>
   <style>
-    :root {
-      --primary: #4ade80;
-      --background: #121212;
-      --foreground: #e0e0e0;
-      --muted-bg: #1e1e1e;
-      --error: #f87171;
+    * {
+      box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      font-family: 'Inter', sans-serif;
-      background-color: var(--background);
-      color: var(--foreground);
+      background: white;
+      color: black;
       display: flex;
       flex-direction: column;
+      justify-content: center;
       align-items: center;
-      padding: 2rem;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      position: relative;
     }
 
-    .container {
-      max-width: 600px;
+    #background-waves {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
     }
 
-    h2 {
-      margin-bottom: 1rem;
-      color: var(--primary);
+    .wave {
+      position: absolute;
+      bottom: 0;
+      width: 200%;
+      height: 100%;
+      opacity: 0.2;
+      animation: waveMotion 10s linear infinite;
     }
 
-    #info-box {
-      background: var(--muted-bg);
-      padding: 2rem;
-      border-radius: 12px;
-      margin-bottom: 2rem;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    .wave path {
+      fill: rgba(0, 255, 255, 0.4);
     }
 
-    #info-box p {
-      margin: 0.75rem 0;
+    .wave.wave2 {
+      animation-duration: 15s;
+      opacity: 0.15;
+    }
+
+    .wave.wave3 {
+      animation-duration: 20s;
+      opacity: 0.1;
+    }
+
+    @keyframes waveMotion {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+
+    #face-wrapper {
+      width: 200px;
+      height: 200px;
+      margin-bottom: 40px;
+      perspective: 1000px;
+      z-index: 1;
+    }
+
+    #face {
+      width: 100%;
+      height: 100%;
+      background-image: url('/mnt/data/7877a263-1bcf-456e-8c3a-5e8c262c945e.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      border-radius: 50%;
+      box-shadow: 0 0 50px rgba(0, 255, 255, 0.6);
+      transition: transform 0.1s ease-out;
+      transform-style: preserve-3d;
+    }
+
+    #text {
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 30px;
+      z-index: 1;
+    }
+
+    #actionButton {
+      padding: 12px 24px;
       font-size: 1rem;
-    }
-
-    .label {
-      font-weight: 600;
-      color: #ffffffcc;
-    }
-
-    .btn {
-      padding: 0.75rem 1.5rem;
-      margin: 0.5rem;
+      background-color: white;
+      border: 2px solid rgba(0, 255, 255, 0.7);
+      color: black;
       border-radius: 8px;
-      background: transparent;
-      border: 1px solid var(--primary);
-      color: var(--primary);
-      font-size: 1rem;
       cursor: pointer;
       transition: all 0.3s ease;
+      z-index: 1;
     }
 
-    .btn:hover {
-      background-color: rgba(74, 222, 128, 0.15);
-    }
-
-    .btn.recording {
-      border-color: var(--error);
-      color: var(--error);
-    }
-
-    #mic-bar {
-      display: flex;
-      gap: 2px;
-      height: 20px;
-      justify-content: center;
-      margin-top: 2rem;
-    }
-
-    .bar {
-      width: 4px;
-      height: 20%;
-      background: #333;
-      transition: height 0.1s;
-    }
-
-    .bar.active {
-      background: orange;
-    }
-
-    #live-transcript-box {
-      margin-top: 2rem;
-      text-align: center;
-      padding: 1rem 2rem;
-      background: var(--muted-bg);
-      border: 1px solid #333;
-      border-radius: 10px;
-    }
-
-    #mic-status {
-      font-weight: 600;
-      color: var(--error);
-      margin-bottom: 0.5rem;
-    }
-
-    #live-text {
-      font-style: italic;
-      color: #aaa;
-    }
-
-    #upload-btn {
-    margin-top: 2rem;
-    padding: 0.75rem 1.5rem;
-    font-size: 1.1rem;
-    border-radius: 10px;
-    border: 2px solid var(--primary);
-    background: transparent;
-    color: var(--primary);
-    cursor: not-allowed;
-    opacity: 0.5;
-    transition: all 0.3s ease;
-  }
-
-  #upload-btn.enabled {
-    cursor: pointer;
-    opacity: 1;
-  }
-
-  #upload-btn.enabled:hover {
-    background-color: rgba(74, 222, 128, 0.15);
-  }
-
-  #upload-btn.uploading {
-    background-color: var(--error);
-    color: white;
-    cursor: not-allowed;
-    opacity: 1;
-  }
-#x-button {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  background-color: var(--primary);
-  color: #000;
-  font-weight: 600;
-  text-decoration: none;
-  transition: background-color 0.3s;
-}
-
-#x-button:hover {
-  background-color: #22c55e; /* darker green on hover */
-}
-
-    input[type="file"] {
-      display: none;
+    #actionButton:hover {
+      background-color: rgba(0, 255, 255, 0.1);
+      box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
     }
   </style>
 </head>
 <body>
-  <a href="https://x.com/VoiceToCoin" target="_blank" id="x-button">Our X</a>
-
-  <div class="container">
-    <h2>VOICE TO PUMP.FUN COIN</h2>
-
-    <div id="info-box">
-      <p><span class="label">Ticker:</span> <span id="ticker-text">N/A</span></p>
-      <p><span class="label">Coin Name:</span> <span id="coin-text">N/A</span></p>
-      <p><span class="label">Image:</span> <span id="image-text">N/A</span></p>
-    </div>
-
-    <div>
-      <button class="btn" id="ticker-btn">SAY TICKER</button>
-      <button class="btn" id="coin-btn">SAY COIN NAME</button>
-      <button class="btn" id="image-btn">SELECT IMAGE</button>
-      <input type="file" id="image-input" accept="image/*" />
-    </div>
-
-    <div id="mic-bar"></div>
-
-    <div id="live-transcript-box">
-      <p id="mic-status">MIC DISABLED</p>
-      <p><strong>Live transcript:</strong></p>
-      <p id="live-text">...</p>
-    </div>
-
-    <button id="upload-btn">FILL IN THE FIELDS TO UPLOAD</button>
+  <div id="background-waves">
+    <svg class="wave wave1" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path d="M0,160L80,186.7C160,213,320,267,480,266.7C640,267,800,213,960,186.7C1120,160,1280,160,1440,160L1440,320L0,320Z"></path>
+    </svg>
+    <svg class="wave wave2" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path d="M0,160L80,186.7C160,213,320,267,480,266.7C640,267,800,213,960,186.7C1120,160,1280,160,1440,160L1440,320L0,320Z"></path>
+    </svg>
+    <svg class="wave wave3" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path d="M0,160L80,186.7C160,213,320,267,480,266.7C640,267,800,213,960,186.7C1120,160,1280,160,1440,160L1440,320L0,320Z"></path>
+    </svg>
   </div>
 
+  <div id="face-wrapper">
+    <div id="face"></div>
+  </div>
+  <div id="text"></div>
+  <button id="actionButton" onclick="location.href='mic-check.html'">Activate</button>
+
+
   <script>
-    const tickerText = document.getElementById('ticker-text');
-    const coinText = document.getElementById('coin-text');
-    const imageText = document.getElementById('image-text');
-    const tickerBtn = document.getElementById('ticker-btn');
-    const coinBtn = document.getElementById('coin-btn');
-    const imageBtn = document.getElementById('image-btn');
-    const imageInput = document.getElementById('image-input');
-    const micBar = document.getElementById('mic-bar');
-    const micStatus = document.getElementById('mic-status');
-    const liveText = document.getElementById('live-text');
-    const uploadBtn = document.getElementById('upload-btn');
+    const message = "Turn Your Words Into Tokens";
+    const words = message.split(" ");
+    const textElement = document.getElementById("text");
 
-    let recognition, activeBtn = null, listeningFor = null;
-    let isRecording = false;
-    let finalTranscript = '';
-
-    const bars = [];
-    for (let i = 0; i < 40; i++) {
-      const bar = document.createElement('div');
-      bar.classList.add('bar');
-      micBar.appendChild(bar);
-      bars.push(bar);
+    function speak(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.pitch = 1.2;
+      utterance.rate = 1;
+      utterance.volume = 1;
+      utterance.lang = 'en-US';
+      speechSynthesis.speak(utterance);
     }
 
-    let audioContext, analyser, micStream, dataArray;
+    let wordIndex = 0;
+    let charIndex = 0;
+    let currentWord = "";
+    let displayed = "";
 
-    async function setupAudioMeter() {
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const source = audioContext.createMediaStreamSource(micStream);
-        analyser = audioContext.createAnalyser();
-        analyser.fftSize = 64;
-        source.connect(analyser);
-        dataArray = new Uint8Array(analyser.frequencyBinCount);
-      }
-    }
-
-    function animateMicLevel(level) {
-      bars.forEach((bar, i) => {
-        if (i < level) {
-          bar.classList.add('active');
-          bar.style.height = `${Math.random() * 80 + 20}%`;
+    function typeNextChar() {
+      if (wordIndex < words.length) {
+        currentWord = words[wordIndex];
+        if (charIndex < currentWord.length) {
+          displayed += currentWord.charAt(charIndex);
+          textElement.textContent = displayed + " ";
+          charIndex++;
+          setTimeout(typeNextChar, 100);
         } else {
-          bar.classList.remove('active');
-          bar.style.height = '20%';
+          speak(currentWord);
+          displayed += " ";
+          charIndex = 0;
+          wordIndex++;
+          setTimeout(typeNextChar, 300);
         }
-      });
-    }
-
-    function updateMicLevel() {
-      if (!analyser || !isRecording) return;
-      analyser.getByteFrequencyData(dataArray);
-      const avg = dataArray.reduce((sum, val) => sum + val, 0) / dataArray.length;
-      const level = Math.floor((avg / 255) * bars.length);
-      animateMicLevel(level);
-      if (isRecording) requestAnimationFrame(updateMicLevel);
-    }
-
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognition = new SpeechRecognition();
-      recognition.lang = 'en-US';
-      recognition.interimResults = true;
-      recognition.continuous = true;
-
-      recognition.onresult = (event) => {
-        let interimTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          const transcript = event.results[i][0].transcript.trim();
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript + ' ';
-          } else {
-            interimTranscript += transcript;
-          }
-        }
-        liveText.textContent = finalTranscript + interimTranscript;
-      };
-
-      recognition.onend = () => {
-        const result = finalTranscript.trim();
-        if (listeningFor === 'ticker') {
-          tickerText.textContent = result.split(' ')[0] || 'N/A';
-        } else if (listeningFor === 'coin') {
-          if (result.length > 32) {
-            coinText.textContent = result.slice(0, 32) + ' (shortened to 32 characters)';
-          } else {
-            coinText.textContent = result || 'N/A';
-          }
-        }
-        stopRecording();
-      };
-
-      recognition.onerror = (event) => {
-        console.error('Recognition error:', event.error);
-        stopRecording();
-      };
-    } else {
-      alert('Speech Recognition not supported. Try Chrome.');
-    }
-
-    async function startRecording(forWhat) {
-      if (!recognition) return;
-      finalTranscript = '';
-      listeningFor = forWhat;
-      await setupAudioMeter();
-      recognition.start();
-      isRecording = true;
-      updateMicLevel();
-      const btn = forWhat === 'ticker' ? tickerBtn : coinBtn;
-      activeBtn = btn;
-      btn.textContent = 'CLICK TO STOP';
-      btn.classList.add('recording');
-      micStatus.textContent = 'MIC ENABLED';
-      micStatus.style.color = '#0f0';
-      liveText.textContent = '...';
-    }
-
-    function stopRecording() {
-      if (!recognition) return;
-      recognition.stop();
-      isRecording = false;
-      animateMicLevel(0);
-      if (activeBtn) {
-        activeBtn.textContent = activeBtn.id === 'ticker-btn' ? 'SAY TICKER' : 'SAY COIN NAME';
-        activeBtn.classList.remove('recording');
-        activeBtn = null;
-      }
-      micStatus.textContent = 'MIC DISABLED';
-      micStatus.style.color = '#f00';
-      liveText.textContent = '...';
-      checkFields();
-    }
-
-    tickerBtn.addEventListener('click', () => {
-      if (isRecording && listeningFor === 'ticker') {
-        stopRecording();
-      } else {
-        stopRecording();
-        startRecording('ticker');
-      }
-    });
-
-    coinBtn.addEventListener('click', () => {
-      if (isRecording && listeningFor === 'coin') {
-        stopRecording();
-      } else {
-        stopRecording();
-        startRecording('coin');
-      }
-    });
-
-    imageBtn.addEventListener('click', () => {
-      imageInput.click();
-    });
-
-    imageInput.addEventListener('change', () => {
-      const file = imageInput.files[0];
-      imageText.textContent = file ? file.name : 'N/A';
-      checkFields();
-    });
-
-    function checkFields() {
-      const coin = coinText.textContent;
-      const ticker = tickerText.textContent;
-      const image = imageInput.files[0];
-      const valid = coin !== 'N/A' && ticker !== 'N/A' && image;
-
-      if (valid) {
-        uploadBtn.textContent = 'UPLOAD TO PUMP.FUN';
-        uploadBtn.classList.add('enabled');
-        uploadBtn.disabled = false;
-      } else {
-        uploadBtn.textContent = 'FILL IN THE FIELDS TO UPLOAD';
-        uploadBtn.classList.remove('enabled');
-        uploadBtn.disabled = true;
       }
     }
 
-    uploadBtn.addEventListener('click', async () => {
-    if (!uploadBtn.classList.contains('enabled') || uploadBtn.classList.contains('uploading')) return;
+    typeNextChar();
 
-    uploadBtn.textContent = 'UPLOADING...';
-    uploadBtn.classList.remove('enabled');
-    uploadBtn.classList.add('uploading');
-    uploadBtn.disabled = true;
+    const face = document.getElementById("face");
+    const wrapper = document.getElementById("face-wrapper");
 
-    setTimeout(() => {
-      uploadBtn.textContent = 'UPLOADED!';
-      uploadBtn.classList.remove('uploading');
-    }, 3000);
-  });
+    document.addEventListener("mousemove", (e) => {
+      const rect = wrapper.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+
+      const offsetX = e.clientX - centerX;
+      const offsetY = e.clientY - centerY;
+
+      const rotateY = offsetX / 20;
+      const rotateX = -offsetY / 20;
+
+      face.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    });
+
+    wrapper.addEventListener("mouseleave", () => {
+      face.style.transform = `rotateX(0deg) rotateY(0deg)`;
+    });
   </script>
 </body>
 </html>
