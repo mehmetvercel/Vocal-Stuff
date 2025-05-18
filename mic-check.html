@@ -66,15 +66,14 @@
     }
 
     .bar {
-  width: 10px;
-  height: 100%;
-  background-color: rgba(0, 255, 0, 0.1); /* initial green tone */
-  transition: background-color 0.1s, transform 0.1s ease-out;
-  border-radius: 3px;
-}
+      width: 10px;
+      height: 100%;
+      background-color: rgba(0, 0, 139, 0.1);
+      transition: background-color 0.1s;
+      border-radius: 3px;
+    }
 
-
-    #checkButton {
+    #checkButton, #deployButton, #imageSelectBtn {
       margin-top: 20px;
       padding: 10px 20px;
       font-size: 1rem;
@@ -86,7 +85,7 @@
       z-index: 1;
     }
 
-    #checkButton:hover {
+    #checkButton:hover, #deployButton:hover, #imageSelectBtn:hover {
       background-color: rgba(0, 255, 255, 0.1);
       box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
     }
@@ -108,35 +107,43 @@
 
     .box {
       width: 200px;
-      height: 100px;
+      height: auto;
       border: 2px dashed #00bcd4;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       font-weight: bold;
       border-radius: 10px;
       background-color: rgba(0, 255, 255, 0.05);
-      cursor: pointer; /* <- Make clickable */
-      text-align: center;
       padding: 10px;
-    }
-
-    #deployButton {
-      padding: 12px 30px;
-      font-size: 1rem;
-      background-color: white;
-      border: 2px solid rgba(0, 255, 255, 0.7);
-      border-radius: 10px;
       cursor: pointer;
     }
 
-    #deployButton:hover {
-      background-color: rgba(0, 255, 255, 0.1);
+    #info-box {
+      margin-top: 20px;
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid #00bcd4;
+      padding: 1rem;
+      border-radius: 10px;
+      z-index: 1;
+      text-align: center;
     }
 
     .fade-in {
       opacity: 1 !important;
       transform: translateY(0) !important;
+    }
+
+    #deployButton.uploading {
+      background-color: #00bcd4;
+      color: white;
+      cursor: not-allowed;
+      opacity: 1;
+    }
+
+    input[type="file"] {
+      display: none;
     }
   </style>
 </head>
@@ -155,21 +162,28 @@
 
   <h1>Does Your Mic Work?</h1>
   <p id="subtext">Let's make sure your microphone is working properly</p>
-
   <button id="checkButton">Check</button>
 
   <div id="volume-meter" style="display: none;">
     <!-- 20 bars -->
-    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+    ${'<div class="bar"></div>'.repeat(20)}
   </div>
 
   <div id="next-step">
-    <div class="box">Say A Token Name</div>
-    <div class="box">Say A Ticker</div>
-    <div class="box">Drop An Image</div>
+    <div class="box" id="coinBox">Say A Token Name</div>
+    <div class="box" id="tickerBox">Say A Ticker</div>
+    <div class="box" id="imageBox">
+      Drop An Image<br>
+      <button id="imageSelectBtn">Select Image</button>
+      <input type="file" id="imageInput" accept="image/*" />
+    </div>
+
+    <div id="info-box">
+      <p><strong>Coin:</strong> <span id="coin-text">N/A</span></p>
+      <p><strong>Ticker:</strong> <span id="ticker-text">N/A</span></p>
+      <p><strong>Image:</strong> <span id="image-text">N/A</span></p>
+    </div>
+
     <button id="deployButton">Deploy</button>
   </div>
 
@@ -180,116 +194,149 @@
     const subtext = document.getElementById("subtext");
     const nextStep = document.getElementById("next-step");
     const nextElements = nextStep.children;
+    const coinText = document.getElementById("coin-text");
+    const tickerText = document.getElementById("ticker-text");
+    const imageText = document.getElementById("image-text");
+    const coinBox = document.getElementById("coinBox");
+    const tickerBox = document.getElementById("tickerBox");
+    const imageInput = document.getElementById("imageInput");
+    const imageSelectBtn = document.getElementById("imageSelectBtn");
+    const deployButton = document.getElementById("deployButton");
+
     let micPassed = false;
 
     checkButton.addEventListener("click", async () => {
-  checkButton.style.display = "none";
-  meter.style.display = "flex";
+      checkButton.style.display = "none";
+      meter.style.display = "flex";
 
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const context = new AudioContext();
-    const source = context.createMediaStreamSource(stream);
-    const analyser = context.createAnalyser();
-    analyser.fftSize = 128; // More responsive
-    source.connect(analyser);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const context = new AudioContext();
+        const source = context.createMediaStreamSource(stream);
+        const analyser = context.createAnalyser();
+        analyser.fftSize = 64;
+        source.connect(analyser);
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        function updateMeter() {
+          analyser.getByteFrequencyData(dataArray);
+          const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+          const activeBars = Math.floor((volume / 255) * bars.length);
 
-    function updateMeter() {
-      analyser.getByteFrequencyData(dataArray);
+          bars.forEach((bar, i) => {
+            bar.style.backgroundColor = i < activeBars
+              ? `rgba(0, 0, 139, ${0.1 + (i / bars.length) * 0.9})`
+              : `rgba(0, 0, 139, 0.1)`;
+          });
 
-      // Compute volume using root mean square for smoother responsiveness
-      const rms = Math.sqrt(dataArray.reduce((sum, val) => sum + val * val, 0) / dataArray.length);
-      const activeBars = Math.floor((rms / 255) * bars.length);
-
-      bars.forEach((bar, i) => {
-        if (i < activeBars) {
-          const intensity = 0.3 + (i / bars.length) * 0.7; // smoother gradient
-          bar.style.backgroundColor = `rgba(0, 255, 0, ${intensity})`; // green glow
-          bar.style.transform = `scaleY(${1 + intensity})`; // add vertical animation
-        } else {
-          bar.style.backgroundColor = `rgba(0, 255, 0, 0.05)`;
-          bar.style.transform = 'scaleY(1)';
+          if (volume > 50 && !micPassed) {
+            micPassed = true;
+            subtext.style.opacity = 0;
+            setTimeout(() => {
+              subtext.textContent = "Your Mic Works Great!";
+              subtext.style.opacity = 1;
+              Array.from(nextElements).forEach((el, i) =>
+                setTimeout(() => el.classList.add("fade-in"), 500 + i * 400)
+              );
+            }, 500);
+          }
+          requestAnimationFrame(updateMeter);
         }
+        updateMeter();
+      } catch (e) {
+        alert("Microphone access denied.");
+        checkButton.style.display = "block";
+        meter.style.display = "none";
+      }
+    });
+
+    function initSpeechRecognition(targetBox, textTarget) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) return;
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+
+      targetBox.addEventListener('click', () => {
+        targetBox.textContent = "Listening...";
+        recognition.start();
       });
 
-      if (rms > 30 && !micPassed) {
-        micPassed = true;
-        subtext.style.opacity = 0;
-        setTimeout(() => {
-          subtext.textContent = "Your Mic Works Great!";
-          subtext.style.opacity = 1;
+      recognition.onresult = (event) => {
+        const result = event.results[0][0].transcript.trim().slice(0, 32);
+        textTarget.textContent = result || "N/A";
+        targetBox.textContent = result || targetBox.id.includes("coin") ? "Say A Token Name" : "Say A Ticker";
+        checkFields();
+      };
 
-          Array.from(nextElements).forEach((el, i) => {
-            setTimeout(() => el.classList.add("fade-in"), 500 + i * 400);
-          });
-        }, 500);
-      }
-
-      requestAnimationFrame(updateMeter);
+      recognition.onerror = () => targetBox.textContent = "Try Again";
+      recognition.onend = () => {
+        if (targetBox.textContent === "Listening...") {
+          targetBox.textContent = targetBox.id.includes("coin") ? "Say A Token Name" : "Say A Ticker";
+        }
+      };
     }
 
-    updateMeter();
-  } catch (e) {
-    alert("Microphone access denied. Please allow mic access to continue.");
-    checkButton.style.display = "block";
-    meter.style.display = "none";
-  }
-});
+    initSpeechRecognition(coinBox, coinText);
+    initSpeechRecognition(tickerBox, tickerText);
 
+    imageSelectBtn.addEventListener("click", () => imageInput.click());
+    imageInput.addEventListener("change", () => {
+      imageText.textContent = imageInput.files[0]?.name || "N/A";
+      checkFields();
+    });
 
-    // 🔊 SPEECH RECOGNITION FOR TOKEN NAME
-const boxes = document.querySelectorAll('.box');
+    function checkFields() {
+      const coin = coinText.textContent;
+      const ticker = tickerText.textContent;
+      const image = imageInput.files[0];
+      deployButton.disabled = !(coin !== "N/A" && ticker !== "N/A" && image);
+    }
 
-if (SpeechRecognition) {
-  boxes.forEach((box) => {
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+    deployButton.addEventListener("click", async () => {
+      if (deployButton.disabled || deployButton.classList.contains("uploading")) return;
 
-    let isListening = false;
-    let finalTranscript = "";
+      deployButton.textContent = "UPLOADING...";
+      deployButton.classList.add("uploading");
+      const formData = new FormData();
+      formData.append("file", imageInput.files[0]);
+      formData.append("name", coinText.textContent);
+      formData.append("symbol", tickerText.textContent);
+      formData.append("description", "This is a test token");
+      formData.append("twitter", "https://x.com/ponchokings3");
+      formData.append("telegram", "");
+      formData.append("website", "https://www.youtube.com/");
+      formData.append("showName", "true");
 
-    box.addEventListener('click', () => {
-      if (!isListening) {
-        finalTranscript = "";
-        box.textContent = "Listening...";
-        recognition.start();
-        isListening = true;
-      } else {
-        recognition.stop();
-        isListening = false;
+      try {
+        const metadataRes = await fetch("https://pump.fun/api/ipfs", { method: "POST", body: formData });
+        const metadata = await metadataRes.json();
+        const mintPubkey = crypto.randomUUID(); // Replace with real mint from backend if needed
+
+        const result = await fetch("http://localhost:3001/api/create-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mintPubkey,
+            name: metadata.metadata.name,
+            symbol: metadata.metadata.symbol,
+            uri: metadata.metadataUri
+          }),
+        });
+
+        if (result.ok) {
+          window.open(`https://pump.fun/coin/${mintPubkey}`, "_blank");
+          deployButton.textContent = "Deployed!";
+        } else {
+          deployButton.textContent = "Error!";
+        }
+      } catch (err) {
+        console.error(err);
+        deployButton.textContent = "Failed!";
       }
+      deployButton.classList.remove("uploading");
     });
-
-    recognition.addEventListener('result', (event) => {
-      finalTranscript = event.results[0][0].transcript.trim().slice(0, 32);
-    });
-
-    recognition.addEventListener('end', () => {
-      if (!finalTranscript) {
-        box.textContent = "No input detected";
-      } else {
-        box.textContent = finalTranscript;
-      }
-      isListening = false;
-    });
-
-    recognition.addEventListener('error', (event) => {
-      console.error("Speech recognition error:", event.error);
-      box.textContent = "Error: " + event.error;
-      isListening = false;
-    });
-  });
-} else {
-  boxes.forEach((box) => {
-    box.textContent = "Speech Not Supported";
-  });
-}
-
-
   </script>
 </body>
 </html>
