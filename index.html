@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Speech to Text</title>
+  <title>Live Speech to Text</title>
   <style>
     body {
       font-family: sans-serif;
@@ -45,12 +45,22 @@
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SpeechRecognition();
       recognition.lang = 'en-US';
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
+      recognition.interimResults = true;
+      recognition.continuous = true;
+
+      let finalTranscript = '';
 
       recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        output.textContent = `You said: "${transcript}"`;
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+        output.textContent = finalTranscript + interimTranscript;
       };
 
       recognition.onerror = (event) => {
