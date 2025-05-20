@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Holographic Token Interface</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary-color: #00CED1;
@@ -41,52 +39,6 @@
       letter-spacing: 1px;
     }
     
-    .app-container {
-      position: relative;
-      width: 90%;
-      max-width: 800px;
-      z-index: 10;
-      perspective: 1000px;
-    }
-    
-    .holographic-card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 0 25px var(--primary-glow), 
-                  inset 0 0 10px rgba(0, 206, 209, 0.2);
-      backdrop-filter: blur(5px);
-      border: 1px solid rgba(0, 206, 209, 0.3);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      transform-style: preserve-3d;
-    }
-    
-    .holographic-card:hover {
-      box-shadow: 0 0 35px var(--primary-glow), 
-                  inset 0 0 15px rgba(0, 206, 209, 0.3);
-    }
-    
-    .app-heading {
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-    
-    .app-heading h1 {
-      font-size: 2.5rem;
-      margin-bottom: 0.5rem;
-      background: linear-gradient(to right, #FFFFFF, var(--primary-color), #FFFFFF);
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
-      text-shadow: 0 0 15px rgba(0, 206, 209, 0.5);
-    }
-    
-    .app-heading p {
-      font-size: 1.1rem;
-      opacity: 0.9;
-      font-weight: 300;
-    }
-    
     /* Canvas for animated waves */
     #waveCanvas {
       position: fixed;
@@ -114,10 +66,42 @@
       opacity: 0.15;
     }
     
-    /* Main content sections */
-    .content-section {
+    .app-container {
+      position: relative;
+      width: 90%;
+      max-width: 800px;
+      z-index: 10;
+    }
+    
+    .holographic-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 0 25px var(--primary-glow), 
+                  inset 0 0 10px rgba(0, 206, 209, 0.2);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(0, 206, 209, 0.3);
+    }
+    
+    .app-heading {
       text-align: center;
-      margin: 2rem 0;
+      margin-bottom: 1.5rem;
+    }
+    
+    .app-heading h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(to right, #FFFFFF, var(--primary-color), #FFFFFF);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 15px rgba(0, 206, 209, 0.5);
+    }
+    
+    .app-heading p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      font-weight: 300;
     }
     
     /* Button styles */
@@ -131,63 +115,26 @@
       font-size: 1rem;
       cursor: pointer;
       transition: all 0.3s ease;
-      position: relative;
-      overflow: hidden;
       margin: 0.5rem;
-      letter-spacing: 1px;
     }
     
-    .holo-button:hover, .holo-button:focus {
+    .holo-button:hover {
       background: rgba(0, 206, 209, 0.1);
       box-shadow: 0 0 15px var(--primary-glow);
       transform: translateY(-2px);
     }
     
-    .holo-button:active {
-      transform: translateY(0);
+    /* Main content sections */
+    .content-section {
+      text-align: center;
+      margin: 2rem 0;
     }
     
-    .holo-button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
-    .holo-button::before {
-      content: '';
-      position: absolute;
-      top: -2px;
-      left: -2px;
-      right: -2px;
-      bottom: -2px;
-      border: 2px solid transparent;
-      animation: borderGlow 2s linear infinite;
-      border-radius: 6px;
-      pointer-events: none;
-      opacity: 0;
-    }
-    
-    .holo-button:hover::before {
-      opacity: 1;
-    }
-    
-    @keyframes borderGlow {
-      0% {
-        border-color: rgba(0, 206, 209, 0);
-      }
-      50% {
-        border-color: rgba(0, 206, 209, 0.5);
-      }
-      100% {
-        border-color: rgba(0, 206, 209, 0);
-      }
-    }
-
     /* Main face display */
     #face-wrapper {
       width: 200px;
       height: 200px;
       margin: 2rem auto;
-      perspective: 1000px;
       position: relative;
     }
     
@@ -199,22 +146,6 @@
       background-position: center;
       border-radius: 50%;
       box-shadow: 0 0 50px var(--primary-glow);
-      transition: transform 0.1s ease-out;
-      transform-style: preserve-3d;
-      position: relative;
-    }
-    
-    #face::after {
-      content: '';
-      position: absolute;
-      top: -10px;
-      left: -10px;
-      right: -10px;
-      bottom: -10px;
-      border-radius: 50%;
-      background: radial-gradient(circle, var(--primary-glow) 0%, rgba(0,0,0,0) 70%);
-      opacity: 0.3;
-      z-index: -1;
     }
     
     /* Typing text effect */
@@ -225,11 +156,12 @@
       font-family: 'Orbitron', sans-serif;
       color: var(--primary-color);
       text-shadow: 0 0 10px rgba(0, 206, 209, 0.5);
+      text-align: center;
     }
     
     /* Volume meter */
     #volume-meter {
-      display: flex;
+      display: none;
       gap: 4px;
       height: 30px;
       margin: 1.5rem auto;
@@ -242,7 +174,7 @@
       width: 8px;
       height: 100%;
       background-color: rgba(0, 206, 209, 0.1);
-      transition: background-color 0.1s, height 0.2s;
+      transition: background-color 0.1s;
       border-radius: 3px;
     }
     
@@ -269,7 +201,6 @@
     
     .input-box:hover {
       background-color: rgba(0, 206, 209, 0.1);
-      box-shadow: 0 0 15px rgba(0, 206, 209, 0.3);
     }
     
     /* Info display */
@@ -322,21 +253,6 @@
       }
     }
     
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      .app-heading h1 {
-        font-size: 2rem;
-      }
-      
-      #text {
-        font-size: 1.5rem;
-      }
-      
-      .holographic-card {
-        padding: 1.5rem;
-      }
-    }
-    
     /* Loading animations */
     .loading-ring {
       display: inline-block;
@@ -366,149 +282,37 @@
       }
     }
     
-    /* Entry screen styles */
-    #entryScreen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      width: 100vw;
+    /* Image preview container */
+    #previewContainer {
       position: fixed;
       top: 0;
       left: 0;
-      background: linear-gradient(135deg, var(--dark-bg), #0F1A30);
-      z-index: 1000;
-      transition: opacity 1.5s ease, visibility 1.5s ease;
-      overflow: hidden;
-    }
-    
-    #entryScreen.hidden {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-    
-    #entryLogo {
-      width: 150px;
-      height: 150px;
-      border-radius: 50%;
-      border: 2px solid var(--primary-color);
-      margin-bottom: 2rem;
-      box-shadow: 0 0 30px var(--primary-glow);
-      display: flex;
-      align-items: center;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.8);
+      display: none;
       justify-content: center;
-      background: rgba(0, 206, 209, 0.1);
-      position: relative;
-      z-index: 2;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
     }
     
-    #entryLogo svg {
-      width: 80px;
-      height: 80px;
-      fill: var(--primary-color);
-    }
-    
-    #enterButton {
-      padding: 1rem 2.5rem;
-      font-size: 1.2rem;
-      letter-spacing: 2px;
-      position: relative;
-      z-index: 2;
-      cursor: pointer !important;
-    }
-    
-    #enterButton:hover {
-      transform: translateY(-3px);
+    #previewImage {
+      max-width: 90%;
+      max-height: 80%;
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
       box-shadow: 0 0 25px var(--primary-glow);
     }
     
-    /* Space warp effect */
-    .space-warp {
+    #closePreviewBtn {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 1px;
-      height: 1px;
-      background: transparent;
-      box-shadow: none;
-      opacity: 0;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-    }
-    
-    .warp-active .space-warp {
-      animation: warpEffect 1.5s forwards;
-    }
-    
-    @keyframes warpEffect {
-      0% {
-        width: 1px;
-        height: 1px;
-        opacity: 0;
-        box-shadow: 
-          0 0 1px 0 #FFFFFF,
-          0 0 1px 0 rgba(0, 206, 209, 0.7),
-          0 0 1px 0 rgba(255, 255, 255, 0.5),
-          0 0 1px 0 rgba(0, 206, 209, 0.3);
-      }
-      25% {
-        opacity: 0.5;
-        box-shadow: 
-          0 0 50px 50px #FFFFFF,
-          0 0 100px 60px rgba(0, 206, 209, 0.7),
-          0 0 150px 70px rgba(255, 255, 255, 0.5),
-          0 0 200px 80px rgba(0, 206, 209, 0.3);
-      }
-      100% {
-        width: 5px;
-        height: 5px;
-        opacity: 1;
-        box-shadow: 
-          0 0 100px 200px #FFFFFF,
-          0 0 200px 250px rgba(0, 206, 209, 0.7),
-          0 0 300px 300px rgba(255, 255, 255, 0.5),
-          0 0 400px 350px rgba(0, 206, 209, 0.3);
-      }
-    }
-    
-    /* Star field effect */
-    .star {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      background: #FFFFFF;
-      z-index: 1;
-    }
-    
-    .warp-active .star {
-      animation: starWarp 1.5s ease-in forwards;
-    }
-    
-    @keyframes starWarp {
-      0% {
-        transform: translateZ(0);
-      }
-      100% {
-        transform: translateZ(1000px);
-      }
+      bottom: 20px;
+      padding: 8px 16px;
     }
   </style>
 </head>
 <body>
-  <!-- Entry Screen -->
-  <div id="entryScreen">
-    <div class="space-warp"></div>
-    <!-- Stars will be added dynamically by JavaScript -->
-    <div id="entryLogo">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-        <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4c1.86 0 3.41 1.28 3.86 3H8.14c.45-1.72 2-3 3.86-3zm-4 5h8c0 .55-.45 1-1 1h-6c-.55 0-1-.45-1-1zm1 3h6c.55 0 1 .45 1 1s-.45 1-1 1h-6c-.55 0-1-.45-1-1s.45-1 1-1z"/>
-      </svg>
-    </div>
-    <button id="enterButton" class="holo-button">ENTER THE WEBSITE</button>
-  </div>
-
   <!-- Grid background effect -->
   <div class="grid-background"></div>
   
@@ -516,7 +320,7 @@
   <canvas id="waveCanvas"></canvas>
   
   <!-- Main app container -->
-  <div class="app-container">
+  <div class="app-container slide-in">
     <div class="holographic-card">
       <div id="homeView">
         <div class="app-heading">
@@ -544,7 +348,7 @@
         <div class="content-section">
           <button id="checkButton" class="holo-button">Check Microphone</button>
           
-          <div id="volume-meter" style="display: none;">
+          <div id="volume-meter">
             <!-- 20 bars for volume visualization -->
             <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
             <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
@@ -575,15 +379,13 @@
   </div>
   
   <!-- Image preview container -->
-  <div id="previewContainer" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 20px;">
-    <img id="previewImage" style="max-width: 90%; max-height: 80%; border: 2px solid var(--primary-color); border-radius: 8px; box-shadow: 0 0 25px var(--primary-glow);">
-    <button id="closePreviewBtn" class="holo-button" style="position: absolute; bottom: 20px; padding: 8px 16px;">Close Preview</button>
+  <div id="previewContainer">
+    <img id="previewImage">
+    <button id="closePreviewBtn" class="holo-button">Close Preview</button>
   </div>
 
   <script>
     // DOM Elements
-    const entryScreen = document.getElementById('entryScreen');
-    const enterButton = document.getElementById('enterButton');
     const actionButton = document.getElementById('actionButton');
     const homeView = document.getElementById('homeView');
     const micCheckView = document.getElementById('micCheckView');
@@ -611,12 +413,7 @@
     // Set the face image placeholder
     faceElement.style.backgroundImage = "url('/api/placeholder/200/200')";
 
-    // Preview image handling
-    closePreviewBtn.addEventListener('click', () => {
-      previewContainer.style.display = 'none';
-    });
-
-    // Canvas setup for wave animation
+    // Canvas setup
     const canvas = document.getElementById('waveCanvas');
     const ctx = canvas.getContext('2d');
 
@@ -629,38 +426,6 @@
     resizeCanvas();
 
     let t = 0;
-    let micPassed = false;
-    let speedMultiplier = 1;
-
-    // Create star field
-    function createStarField() {
-      const numberOfStars = 200;
-      
-      for (let i = 0; i < numberOfStars; i++) {
-        const star = document.createElement('div');
-        star.className = 'star';
-        
-        // Random position
-        star.style.left = `${Math.random() * 100}%`;
-        star.style.top = `${Math.random() * 100}%`;
-        
-        // Random size
-        const size = Math.random() * 2;
-        star.style.width = `${size}px`;
-        star.style.height = `${size}px`;
-        
-        // Random opacity
-        star.style.opacity = Math.random() * 0.8 + 0.2;
-        
-        // Random depth (for 3D effect)
-        star.style.transform = `translateZ(${Math.random() * 500}px)`;
-        
-        entryScreen.appendChild(star);
-      }
-    }
-    
-    // Create stars
-    createStarField();
 
     // Wave animation function
     function drawWave(yOffset, freq, amp, speed, color, thickness = 1) {
@@ -677,74 +442,53 @@
       ctx.stroke();
     }
 
-    // Main animation loop
+    // Animation loop
     function animate() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // Draw several waves with different parameters for a richer effect - with speed multiplier
-      drawWave(-100, 0.005, 30, 0.3 * speedMultiplier, 'rgba(0, 206, 209, 0.05)', 1.5);
-      drawWave(-80, 0.008, 25, 0.4 * speedMultiplier, 'rgba(0, 206, 209, 0.07)', 1.2);
-      drawWave(-60, 0.01, 20, 0.5 * speedMultiplier, 'rgba(0, 206, 209, 0.1)', 1);
-      drawWave(-30, 0.012, 15, 0.6 * speedMultiplier, 'rgba(0, 206, 209, 0.12)', 1);
-      drawWave(0, 0.015, 25, 0.4 * speedMultiplier, 'rgba(0, 206, 209, 0.15)', 1.5);
-      drawWave(30, 0.013, 18, 0.45 * speedMultiplier, 'rgba(0, 206, 209, 0.12)', 1);
-      drawWave(60, 0.011, 22, 0.35 * speedMultiplier, 'rgba(0, 206, 209, 0.1)', 1);
-      drawWave(80, 0.009, 28, 0.3 * speedMultiplier, 'rgba(0, 206, 209, 0.07)', 1.2);
-      drawWave(100, 0.007, 35, 0.25 * speedMultiplier, 'rgba(0, 206, 209, 0.05)', 1.5);
+      drawWave(-100, 0.005, 30, 0.3, 'rgba(0, 206, 209, 0.05)', 1.5);
+      drawWave(-60, 0.01, 20, 0.5, 'rgba(0, 206, 209, 0.1)', 1);
+      drawWave(0, 0.015, 25, 0.4, 'rgba(0, 206, 209, 0.15)', 1.5);
+      drawWave(60, 0.011, 22, 0.35, 'rgba(0, 206, 209, 0.1)', 1);
       
-      t += 0.5 * speedMultiplier;
+      t += 0.5;
       requestAnimationFrame(animate);
     }
 
     // Start animation
     animate();
 
-    // Speech synthesis function
+    // Speech synthesis
     function speakFullPhrase() {
       const message = "Turn Your Words Into Tokens";
       
       if ('speechSynthesis' in window) {
         try {
-          // Cancel any previous speech
           window.speechSynthesis.cancel();
           
-          // Create a single utterance for the whole phrase
           const utterance = new SpeechSynthesisUtterance(message);
           utterance.rate = 0.9;
           utterance.pitch = 1.1;
           utterance.volume = 1;
-          utterance.lang = 'en-US';
           
-          // Get voices (this can be asynchronous in some browsers)
-          let voices = window.speechSynthesis.getVoices();
-          if (voices.length === 0) {
-            // Some browsers need to wait for voices to load
-            window.speechSynthesis.onvoiceschanged = function() {
-              voices = window.speechSynthesis.getVoices();
-              utterance.voice = voices[0]; // Default to first voice
-              window.speechSynthesis.speak(utterance);
-            };
-          } else {
-            window.speechSynthesis.speak(utterance);
-          }
+          window.speechSynthesis.speak(utterance);
         } catch (e) {
-          console.error("Speech synthesis error:", e);
+          console.error("Speech error:", e);
         }
       }
     }
 
-    // Typing animation for main text
+    // Typing animation
     const message = "Turn Your Words Into Tokens";
     const words = message.split(" ");
     
     let wordIndex = 0;
     let charIndex = 0;
-    let currentWord = "";
     let displayed = "";
 
     function typeNextChar() {
       if (wordIndex < words.length) {
-        currentWord = words[wordIndex];
+        const currentWord = words[wordIndex];
         
         if (charIndex < currentWord.length) {
           displayed += currentWord.charAt(charIndex);
@@ -758,57 +502,254 @@
           setTimeout(typeNextChar, 300);
         }
       } else {
-        // Remove the cursor when typing is complete
         textElement.textContent = displayed.trim();
       }
     }
 
-    // View switching function
-    function switchToMicCheck() {
+    // Start typing and speech immediately when page loads
+    window.addEventListener('load', function() {
+      typeNextChar();
+      // Wait for user interaction before playing audio
+      document.addEventListener('click', function speakOnce() {
+        speakFullPhrase();
+        document.removeEventListener('click', speakOnce);
+      }, { once: true });
+    });
+
+    // Action button (Initialize)
+    actionButton.addEventListener('click', function() {
       homeView.style.display = 'none';
       micCheckView.style.display = 'block';
       micCheckView.classList.add('slide-in');
-    }
-
-    // Entry screen handling
-    enterButton.addEventListener('click', function() {
-      console.log("Enter button clicked");
-      
-      // Activate warp effect
-      entryScreen.classList.add('warp-active');
-      
-      // Speed up animation
-      speedMultiplier = 1;
-      const warpSpeed = 5;
-      
-      const warpInterval = setInterval(() => {
-        speedMultiplier += 0.2;
-        if (speedMultiplier >= warpSpeed) {
-          clearInterval(warpInterval);
-        }
-      }, 100);
-      
-      // After entry screen animation finishes
-      setTimeout(() => {
-        console.log("Hiding entry screen");
-        entryScreen.classList.add('hidden');
-        
-        // Reset animation speed back to normal after transition
-        setTimeout(() => {
-          console.log("Resetting animation and starting content");
-          speedMultiplier = 1;
-          
-          // Start typing animation
-          typeNextChar();
-          
-          // Try to speak after user interaction
-          speakFullPhrase();
-        }, 500);
-      }, 1500);
     });
 
-    // Event Listeners
-    actionButton.addEventListener('click', switchToMicCheck);
+    // Add microphone bypass option
+    checkButton.innerHTML += '<div style="margin-top: 10px; font-size: 0.8rem;"><a href="#" id="bypassMic" style="color: rgba(0, 206, 209, 0.7);">Skip microphone check</a></div>';
+    
+    document.getElementById('bypassMic').addEventListener('click', function(e) {
+      e.preventDefault();
+      checkButton.style.display = 'none';
+      volumeMeter.style.display = 'none';
+      subtext.textContent = "Microphone check skipped";
+      
+      // Show next elements
+      nextElements.forEach((el, i) => {
+        setTimeout(() => el.classList.add('fade-in'), 300 + i * 300);
+      });
+    });
 
-    // Add a manual bypass button
-    checkButton.innerHTML += '<div style="margin-top: 10px; font-size: 0.8rem;"><a href="#" i
+    // Microphone check
+    checkButton.addEventListener('click', async function() {
+      try {
+        checkButton.style.display = 'none';
+        volumeMeter.style.display = 'flex';
+        
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const context = new AudioContext();
+        const source = context.createMediaStreamSource(stream);
+        const analyser = context.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        function updateMeter() {
+          analyser.getByteFrequencyData(dataArray);
+          const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+          const activeBars = Math.floor((volume / 255) * bars.length);
+
+          bars.forEach((bar, i) => {
+            bar.style.backgroundColor = i < activeBars 
+              ? `rgba(0, 206, 209, ${0.1 + (i / bars.length)})`
+              : 'rgba(0, 206, 209, 0.1)';
+          });
+          
+          // Auto-proceed after 5 seconds or if sound detected
+          if (volume > 20 || Date.now() - startTime > 5000) {
+            clearInterval(meterInterval);
+            subtext.textContent = "Your Mic Works Great!";
+            
+            // Show next elements
+            nextElements.forEach((el, i) => {
+              setTimeout(() => el.classList.add('fade-in'), 500 + i * 300);
+            });
+          }
+        }
+        
+        const startTime = Date.now();
+        const meterInterval = setInterval(updateMeter, 50);
+      } catch (e) {
+        console.error("Mic error:", e);
+        checkButton.style.display = 'none';
+        subtext.textContent = "Couldn't access microphone. Proceeding anyway...";
+        
+        // Still proceed
+        setTimeout(() => {
+          nextElements.forEach((el, i) => {
+            setTimeout(() => el.classList.add('fade-in'), 500 + i * 300);
+          });
+        }, 1000);
+      }
+    });
+
+    // Simplified text input for token and ticker
+    coinBox.addEventListener('click', function() {
+      if (this.querySelector('input')) return;
+      
+      const value = coinText.textContent !== 'N/A' ? coinText.textContent : '';
+      this.innerHTML = `<input type="text" placeholder="Enter Token Name" style="padding: 8px; width: 80%; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--primary-color); border-radius: 4px;">`;
+      
+      const input = this.querySelector('input');
+      input.value = value;
+      input.focus();
+      
+      input.addEventListener('input', function() {
+        coinText.textContent = this.value || 'N/A';
+        checkDeployStatus();
+      });
+    });
+
+    tickerBox.addEventListener('click', function() {
+      if (this.querySelector('input')) return;
+      
+      const value = tickerText.textContent !== 'N/A' ? tickerText.textContent : '';
+      this.innerHTML = `<input type="text" placeholder="Enter Ticker Symbol" style="padding: 8px; width: 80%; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--primary-color); border-radius: 4px;">`;
+      
+      const input = this.querySelector('input');
+      input.value = value;
+      input.focus();
+      
+      input.addEventListener('input', function() {
+        tickerText.textContent = this.value.toUpperCase() || 'N/A';
+        checkDeployStatus();
+      });
+    });
+
+    // Check deploy status
+    function checkDeployStatus() {
+      deployButton.disabled = !(
+        coinText.textContent !== 'N/A' && 
+        tickerText.textContent !== 'N/A' && 
+        imageText.textContent !== 'N/A'
+      );
+    }
+
+    // Image handling
+    imageSelectBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      imageInput.click();
+    });
+    
+    closePreviewBtn.addEventListener('click', function() {
+      previewContainer.style.display = 'none';
+    });
+    
+    imageInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        const file = this.files[0];
+        imageText.textContent = file.name;
+        
+        // Update image box
+        imageBox.innerHTML = `
+          ${file.name}
+          <button id="previewImageBtn" class="holo-button" style="margin-top: 10px; padding: 5px 10px; font-size: 0.8rem;">
+            Preview Image
+          </button>
+        `;
+        
+        // Set preview button
+        document.getElementById('previewImageBtn').addEventListener('click', function(e) {
+          e.stopPropagation();
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.style.display = 'flex';
+          };
+          reader.readAsDataURL(file);
+        });
+        
+        // Update face
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          faceElement.style.backgroundImage = `url('${e.target.result}')`;
+        };
+        reader.readAsDataURL(file);
+        
+        checkDeployStatus();
+      }
+    });
+
+    // Drag and drop for image
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
+      imageBox.addEventListener(event, function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    });
+    
+    ['dragenter', 'dragover'].forEach(event => {
+      imageBox.addEventListener(event, function() {
+        this.style.backgroundColor = 'rgba(0, 206, 209, 0.2)';
+        this.style.borderStyle = 'solid';
+      });
+    });
+    
+    ['dragleave', 'drop'].forEach(event => {
+      imageBox.addEventListener(event, function() {
+        this.style.backgroundColor = 'rgba(0, 206, 209, 0.05)';
+        this.style.borderStyle = 'dashed';
+      });
+    });
+    
+    imageBox.addEventListener('drop', function(e) {
+      const files = e.dataTransfer.files;
+      if (files && files[0]) {
+        imageInput.files = files;
+        const file = files[0];
+        imageText.textContent = file.name;
+        
+        // Update image box
+        this.innerHTML = `
+          ${file.name}
+          <button id="previewImageBtn" class="holo-button" style="margin-top: 10px; padding: 5px 10px; font-size: 0.8rem;">
+            Preview Image
+          </button>
+        `;
+        
+        // Set preview button
+        document.getElementById('previewImageBtn').addEventListener('click', function(e) {
+          e.stopPropagation();
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.style.display = 'flex';
+          };
+          reader.readAsDataURL(file);
+        });
+        
+        // Update face
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          faceElement.style.backgroundImage = `url('${e.target.result}')`;
+        };
+        reader.readAsDataURL(file);
+        
+        checkDeployStatus();
+      }
+    });
+
+    // Deploy button
+    deployButton.addEventListener('click', function() {
+      this.innerHTML = 'UPLOADING... <div class="loading-ring"></div>';
+      this.disabled = true;
+      
+      setTimeout(() => {
+        this.textContent = 'DEPLOYED SUCCESSFULLY';
+        
+        setTimeout(() => {
+          alert('Token deployment simulation completed!');
+        }, 1000);
+      }, 2000);
+    });
+  </script>
+</body>
+</html>
