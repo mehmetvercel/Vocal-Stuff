@@ -218,6 +218,9 @@
     <button id="enterButton" class="enter-button">ENTER SITE</button>
   </div>
 
+  <!-- Preload audio file to ensure it's ready when the user is redirected -->
+  <link rel="prefetch" href="audio.mp3" as="audio">
+
   <script>
     // Create star field
     function createStarField() {
@@ -307,6 +310,9 @@
           clearInterval(warpInterval);
         }
       }, 100);
+      
+      // Set a flag in sessionStorage to indicate audio should autoplay on the next page
+      sessionStorage.setItem('autoplayAudio', 'true');
       
       // Redirect after animation finishes
       setTimeout(() => {
