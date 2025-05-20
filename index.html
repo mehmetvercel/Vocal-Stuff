@@ -2,149 +2,541 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Interactive Holographic Face</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Holographic Token Interface</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --primary-color: #00CED1;
+      --primary-glow: rgba(0, 206, 209, 0.6);
+      --dark-bg: #080B16;
+      --light-text: #F0F8FF;
+      --card-bg: rgba(8, 11, 22, 0.7);
+      --grid-color: rgba(0, 206, 209, 0.2);
+    }
+    
     * {
       box-sizing: border-box;
-    }
-
-    body {
       margin: 0;
-      background: white;
-      color: black;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, var(--dark-bg), #0F1A30);
+      color: var(--light-text);
+      height: 100vh;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
-      height: 100vh;
-      font-family: Arial, sans-serif;
-      overflow: hidden;
+      justify-content: center;
       position: relative;
     }
-
-    #background-waves {
-      position: absolute;
+    
+    h1, h2, h3, .digital-text {
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 1px;
+    }
+    
+    .app-container {
+      position: relative;
+      width: 90%;
+      max-width: 800px;
+      z-index: 10;
+      perspective: 1000px;
+    }
+    
+    .holographic-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 0 25px var(--primary-glow), 
+                  inset 0 0 10px rgba(0, 206, 209, 0.2);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(0, 206, 209, 0.3);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transform-style: preserve-3d;
+    }
+    
+    .holographic-card:hover {
+      box-shadow: 0 0 35px var(--primary-glow), 
+                  inset 0 0 15px rgba(0, 206, 209, 0.3);
+    }
+    
+    .app-heading {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .app-heading h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(to right, #FFFFFF, var(--primary-color), #FFFFFF);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 15px rgba(0, 206, 209, 0.5);
+    }
+    
+    .app-heading p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      font-weight: 300;
+    }
+    
+    /* Canvas for animated waves */
+    #waveCanvas {
+      position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      z-index: 0;
-      overflow: hidden;
-      pointer-events: none;
+      z-index: 1;
     }
-
-    .wave {
-      position: absolute;
-      bottom: 0;
-      width: 200%;
+    
+    /* Background grid effect */
+    .grid-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
       height: 100%;
-      opacity: 0.2;
-      animation: waveMotion 10s linear infinite;
-    }
-
-    .wave path {
-      fill: rgba(0, 255, 255, 0.4);
-    }
-
-    .wave.wave2 {
-      animation-duration: 15s;
+      background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
+                        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 50px 50px;
+      z-index: 0;
+      perspective: 800px;
+      transform-style: preserve-3d;
+      transform: rotateX(75deg);
       opacity: 0.15;
     }
-
-    .wave.wave3 {
-      animation-duration: 20s;
-      opacity: 0.1;
+    
+    /* Main content sections */
+    .content-section {
+      text-align: center;
+      margin: 2rem 0;
     }
-
-    @keyframes waveMotion {
+    
+    /* Button styles */
+    .holo-button {
+      background: transparent;
+      color: var(--primary-color);
+      border: 1px solid var(--primary-color);
+      border-radius: 6px;
+      padding: 0.8rem 2rem;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      margin: 0.5rem;
+      letter-spacing: 1px;
+    }
+    
+    .holo-button:hover, .holo-button:focus {
+      background: rgba(0, 206, 209, 0.1);
+      box-shadow: 0 0 15px var(--primary-glow);
+      transform: translateY(-2px);
+    }
+    
+    .holo-button:active {
+      transform: translateY(0);
+    }
+    
+    .holo-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .holo-button::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      border: 2px solid transparent;
+      animation: borderGlow 2s linear infinite;
+      border-radius: 6px;
+      pointer-events: none;
+      opacity: 0;
+    }
+    
+    .holo-button:hover::before {
+      opacity: 1;
+    }
+    
+    @keyframes borderGlow {
       0% {
-        transform: translateX(0);
+        border-color: rgba(0, 206, 209, 0);
+      }
+      50% {
+        border-color: rgba(0, 206, 209, 0.5);
       }
       100% {
-        transform: translateX(-50%);
+        border-color: rgba(0, 206, 209, 0);
       }
     }
 
+    /* Main face display */
     #face-wrapper {
       width: 200px;
       height: 200px;
-      margin-bottom: 40px;
+      margin: 2rem auto;
       perspective: 1000px;
-      z-index: 1;
+      position: relative;
     }
-
+    
     #face {
       width: 100%;
       height: 100%;
-      background-image: url('/mnt/data/7877a263-1bcf-456e-8c3a-5e8c262c945e.png');
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
       border-radius: 50%;
-      box-shadow: 0 0 50px rgba(0, 255, 255, 0.6);
+      box-shadow: 0 0 50px var(--primary-glow);
       transition: transform 0.1s ease-out;
       transform-style: preserve-3d;
+      position: relative;
     }
-
+    
+    #face::after {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      right: -10px;
+      bottom: -10px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--primary-glow) 0%, rgba(0,0,0,0) 70%);
+      opacity: 0.3;
+      z-index: -1;
+    }
+    
+    /* Typing text effect */
     #text {
-      font-size: 2rem;
-      text-align: center;
-      margin-bottom: 30px;
-      z-index: 1;
+      font-size: 1.8rem;
+      min-height: 2.5rem;
+      margin: 1.5rem 0;
+      font-family: 'Orbitron', sans-serif;
+      color: var(--primary-color);
+      text-shadow: 0 0 10px rgba(0, 206, 209, 0.5);
     }
-
-    #actionButton {
-      padding: 12px 24px;
-      font-size: 1rem;
-      background-color: white;
-      border: 2px solid rgba(0, 255, 255, 0.7);
-      color: black;
+    
+    /* Volume meter */
+    #volume-meter {
+      display: flex;
+      gap: 4px;
+      height: 30px;
+      margin: 1.5rem auto;
+      justify-content: center;
+      width: 80%;
+      max-width: 400px;
+    }
+    
+    .bar {
+      width: 8px;
+      height: 100%;
+      background-color: rgba(0, 206, 209, 0.1);
+      transition: background-color 0.1s, height 0.2s;
+      border-radius: 3px;
+    }
+    
+    /* Input boxes */
+    .input-box {
+      width: 80%;
+      max-width: 300px;
+      height: auto;
+      margin: 1rem auto;
+      padding: 1rem;
+      border: 2px dashed var(--primary-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
       border-radius: 8px;
+      background-color: rgba(0, 206, 209, 0.05);
       cursor: pointer;
       transition: all 0.3s ease;
-      z-index: 1;
+      opacity: 0;
+      transform: translateY(20px);
     }
-
-    #actionButton:hover {
-      background-color: rgba(0, 255, 255, 0.1);
-      box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+    
+    .input-box:hover {
+      background-color: rgba(0, 206, 209, 0.1);
+      box-shadow: 0 0 15px rgba(0, 206, 209, 0.3);
+    }
+    
+    /* Info display */
+    #info-box {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--primary-color);
+      padding: 1.2rem;
+      border-radius: 8px;
+      margin: 1.5rem auto;
+      width: 80%;
+      max-width: 350px;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    
+    #info-box p {
+      margin: 0.7rem 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    #info-box strong {
+      color: var(--primary-color);
+    }
+    
+    /* Animation classes */
+    .fade-in {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
+    
+    /* Hide file input */
+    input[type="file"] {
+      display: none;
+    }
+    
+    /* Page transitions */
+    .slide-in {
+      animation: slideIn 0.6s forwards;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .app-heading h1 {
+        font-size: 2rem;
+      }
+      
+      #text {
+        font-size: 1.5rem;
+      }
+      
+      .holographic-card {
+        padding: 1.5rem;
+      }
+    }
+    
+    /* Loading animations */
+    .loading-ring {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    
+    .loading-ring:after {
+      content: " ";
+      display: block;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid var(--primary-color);
+      border-color: var(--primary-color) transparent var(--primary-color) transparent;
+      animation: loading-ring 1.2s linear infinite;
+    }
+    
+    @keyframes loading-ring {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
     }
   </style>
 </head>
 <body>
-  <div id="background-waves">
-    <svg class="wave wave1" viewBox="0 0 1440 320" preserveAspectRatio="none">
-      <path d="M0,160L80,186.7C160,213,320,267,480,266.7C640,267,800,213,960,186.7C1120,160,1280,160,1440,160L1440,320L0,320Z"></path>
-    </svg>
-    <svg class="wave wave2" viewBox="0 0 1440 320" preserveAspectRatio="none">
-      <path d="M0,160L80,186.7C160,213,320,267,480,266.7C640,267,800,213,960,186.7C1120,160,1280,160,1440,160L1440,320L0,320Z"></path>
-    </svg>
-    <svg class="wave wave3" viewBox="0 0 1440 320" preserveAspectRatio="none">
-      <path d="M0,160L80,186.7C160,213,320,267,480,266.7C640,267,800,213,960,186.7C1120,160,1280,160,1440,160L1440,320L0,320Z"></path>
-    </svg>
+  <!-- Grid background effect -->
+  <div class="grid-background"></div>
+  
+  <!-- Canvas for animated waves -->
+  <canvas id="waveCanvas"></canvas>
+  
+  <!-- Main app container -->
+  <div class="app-container slide-in">
+    <div class="holographic-card">
+      <div id="homeView">
+        <div class="app-heading">
+          <h1>Holographic Token Interface</h1>
+          <p>Turn your words into digital assets</p>
+        </div>
+        
+        <div id="face-wrapper">
+          <div id="face"></div>
+        </div>
+        
+        <div id="text"></div>
+        
+        <div class="content-section">
+          <button id="actionButton" class="holo-button">Initialize</button>
+        </div>
+      </div>
+      
+      <div id="micCheckView" style="display: none;">
+        <div class="app-heading">
+          <h1>Microphone Check</h1>
+          <p id="subtext">Let's verify your microphone is working</p>
+        </div>
+        
+        <div class="content-section">
+          <button id="checkButton" class="holo-button">Check Microphone</button>
+          
+          <div id="volume-meter" style="display: none;">
+            <!-- 20 bars for volume visualization -->
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          </div>
+        </div>
+        
+        <div id="next-step">
+          <div class="input-box" id="coinBox">Say A Token Name</div>
+          <div class="input-box" id="tickerBox">Say A Ticker</div>
+          <div class="input-box" id="imageBox">
+            Select An Image
+            <button id="imageSelectBtn" class="holo-button" style="margin-top: 0.5rem; padding: 0.4rem 1rem; font-size: 0.8rem;">Browse</button>
+            <input type="file" id="imageInput" accept="image/*" />
+          </div>
+          
+          <div id="info-box">
+            <p><strong>Token:</strong> <span id="coin-text">N/A</span></p>
+            <p><strong>Ticker:</strong> <span id="ticker-text">N/A</span></p>
+            <p><strong>Image:</strong> <span id="image-text">N/A</span></p>
+          </div>
+          
+          <button id="deployButton" class="holo-button" disabled>Deploy</button>
+        </div>
+      </div>
+    </div>
   </div>
-
-  <div id="face-wrapper">
-    <div id="face"></div>
-  </div>
-  <div id="text"></div>
-  <button id="actionButton" onclick="location.href='mic-check.html'">Activate</button>
-
 
   <script>
-    const message = "Turn Your Words Into Tokens";
-    const words = message.split(" ");
-    const textElement = document.getElementById("text");
+    // DOM Elements
+    const actionButton = document.getElementById('actionButton');
+    const homeView = document.getElementById('homeView');
+    const micCheckView = document.getElementById('micCheckView');
+    const checkButton = document.getElementById('checkButton');
+    const volumeMeter = document.getElementById('volume-meter');
+    const bars = document.querySelectorAll('.bar');
+    const subtext = document.getElementById('subtext');
+    const nextStep = document.getElementById('next-step');
+    const nextElements = document.querySelectorAll('.input-box, #info-box, #deployButton');
+    const coinText = document.getElementById('coin-text');
+    const tickerText = document.getElementById('ticker-text');
+    const imageText = document.getElementById('image-text');
+    const coinBox = document.getElementById('coinBox');
+    const tickerBox = document.getElementById('tickerBox');
+    const imageBox = document.getElementById('imageBox');
+    const imageInput = document.getElementById('imageInput');
+    const imageSelectBtn = document.getElementById('imageSelectBtn');
+    const deployButton = document.getElementById('deployButton');
+    const faceElement = document.getElementById('face');
+    const textElement = document.getElementById('text');
 
-    function speak(text) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.pitch = 1.2;
-      utterance.rate = 1;
-      utterance.volume = 1;
-      utterance.lang = 'en-US';
-      speechSynthesis.speak(utterance);
+    // Set the face image placeholder
+    faceElement.style.backgroundImage = "url('/api/placeholder/200/200')";
+
+    // Canvas setup for wave animation
+    const canvas = document.getElementById('waveCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let t = 0;
+    let micPassed = false;
+
+    // Initialize 3D rotation effect for face
+    if (faceElement) {
+      const faceWrapper = document.getElementById('face-wrapper');
+      
+      document.addEventListener("mousemove", (e) => {
+        if (!faceWrapper) return;
+        
+        const rect = faceWrapper.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+  
+        const offsetX = (e.clientX - centerX) / 15;
+        const offsetY = (e.clientY - centerY) / 15;
+  
+        faceElement.style.transform = `rotateY(${offsetX}deg) rotateX(${-offsetY}deg)`;
+      });
+  
+      faceWrapper.addEventListener("mouseleave", () => {
+        faceElement.style.transform = `rotateY(0deg) rotateX(0deg)`;
+      });
     }
 
+    // Wave animation function
+    function drawWave(yOffset, freq, amp, speed, color, thickness = 1) {
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height / 2 + yOffset);
+      
+      for (let x = 0; x <= canvas.width; x += 2) {
+        const y = canvas.height / 2 + yOffset + Math.sin((x * freq + t * speed)) * amp;
+        ctx.lineTo(x, y);
+      }
+      
+      ctx.strokeStyle = color;
+      ctx.lineWidth = thickness;
+      ctx.stroke();
+    }
+
+    // Main animation loop
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw several waves with different parameters for a richer effect
+      drawWave(-100, 0.005, 30, 0.3, 'rgba(0, 206, 209, 0.05)', 1.5);
+      drawWave(-80, 0.008, 25, 0.4, 'rgba(0, 206, 209, 0.07)', 1.2);
+      drawWave(-60, 0.01, 20, 0.5, 'rgba(0, 206, 209, 0.1)', 1);
+      drawWave(-30, 0.012, 15, 0.6, 'rgba(0, 206, 209, 0.12)', 1);
+      drawWave(0, 0.015, 25, 0.4, 'rgba(0, 206, 209, 0.15)', 1.5);
+      drawWave(30, 0.013, 18, 0.45, 'rgba(0, 206, 209, 0.12)', 1);
+      drawWave(60, 0.011, 22, 0.35, 'rgba(0, 206, 209, 0.1)', 1);
+      drawWave(80, 0.009, 28, 0.3, 'rgba(0, 206, 209, 0.07)', 1.2);
+      drawWave(100, 0.007, 35, 0.25, 'rgba(0, 206, 209, 0.05)', 1.5);
+      
+      t += 0.5;
+      requestAnimationFrame(animate);
+    }
+
+    // Start animation
+    animate();
+
+    // Typing animation for main text
+    const message = "Turn Your Words Into Tokens";
+    const words = message.split(" ");
+    
     let wordIndex = 0;
     let charIndex = 0;
     let currentWord = "";
@@ -153,42 +545,244 @@
     function typeNextChar() {
       if (wordIndex < words.length) {
         currentWord = words[wordIndex];
+        
         if (charIndex < currentWord.length) {
           displayed += currentWord.charAt(charIndex);
-          textElement.textContent = displayed + " ";
+          textElement.textContent = displayed + "|";
           charIndex++;
           setTimeout(typeNextChar, 100);
         } else {
-          speak(currentWord);
+          if (typeof window.speechSynthesis !== 'undefined') {
+            const utterance = new SpeechSynthesisUtterance(currentWord);
+            utterance.pitch = 1.2;
+            utterance.rate = 1;
+            utterance.volume = 1;
+            utterance.lang = 'en-US';
+            speechSynthesis.speak(utterance);
+          }
+          
           displayed += " ";
           charIndex = 0;
           wordIndex++;
           setTimeout(typeNextChar, 300);
         }
+      } else {
+        // Remove the cursor when typing is complete
+        textElement.textContent = displayed.trim();
       }
     }
 
+    // Start typing animation
     typeNextChar();
 
-    const face = document.getElementById("face");
-    const wrapper = document.getElementById("face-wrapper");
+    // Initialize speech recognition
+    function initSpeechRecognition(targetBox, textTarget, isTicker = false) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      if (!SpeechRecognition) {
+        targetBox.textContent = "Speech recognition not supported";
+        targetBox.style.color = "red";
+        return;
+      }
 
-    document.addEventListener("mousemove", (e) => {
-      const rect = wrapper.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
 
-      const offsetX = e.clientX - centerX;
-      const offsetY = e.clientY - centerY;
+      targetBox.addEventListener('click', () => {
+        targetBox.innerHTML = "Listening... <div class='loading-ring'></div>";
+        recognition.start();
+      });
 
-      const rotateY = offsetX / 20;
-      const rotateX = -offsetY / 20;
+      recognition.onresult = (event) => {
+        let result = event.results[0][0].transcript.trim();
+        if (isTicker) {
+          // For ticker, use only the first word, convert to uppercase
+          result = result.split(' ')[0].toUpperCase(); 
+        }
+        
+        textTarget.textContent = result || "N/A";
+        targetBox.textContent = result || (isTicker ? "Say A Ticker" : "Say A Token Name");
+        checkDeployStatus();
+      };
 
-      face.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      recognition.onerror = () => {
+        targetBox.textContent = "Try Again";
+        setTimeout(() => {
+          targetBox.textContent = isTicker ? "Say A Ticker" : "Say A Token Name";
+        }, 2000);
+      };
+      
+      recognition.onend = () => {
+        if (targetBox.innerHTML.includes("Listening")) {
+          targetBox.textContent = isTicker ? "Say A Ticker" : "Say A Token Name";
+        }
+      };
+    }
+
+    // Check if all fields are filled to enable deploy button
+    function checkDeployStatus() {
+      const coin = coinText.textContent;
+      const ticker = tickerText.textContent;
+      const image = imageInput.files[0];
+      
+      if (coin !== "N/A" && ticker !== "N/A" && image) {
+        deployButton.disabled = false;
+      } else {
+        deployButton.disabled = true;
+      }
+    }
+
+    // View switching function
+    function switchToMicCheck() {
+      homeView.style.display = 'none';
+      micCheckView.style.display = 'block';
+      micCheckView.classList.add('slide-in');
+    }
+
+    // Event Listeners
+    actionButton.addEventListener('click', switchToMicCheck);
+
+    checkButton.addEventListener('click', async () => {
+      checkButton.style.display = 'none';
+      volumeMeter.style.display = 'flex';
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const context = new AudioContext();
+        const source = context.createMediaStreamSource(stream);
+        const analyser = context.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        function updateMeter() {
+          analyser.getByteFrequencyData(dataArray);
+          const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+          const activeBars = Math.floor((volume / 255) * bars.length);
+
+          bars.forEach((bar, i) => {
+            const intensity = i < activeBars ? (i / bars.length) : 0;
+            const heightPercent = i < activeBars ? 100 + (i / bars.length) * 100 : 100;
+            
+            bar.style.backgroundColor = `rgba(0, 206, 209, ${0.1 + intensity * 0.9})`;
+            bar.style.height = `${heightPercent}%`;
+          });
+
+          if (volume > 50 && !micPassed) {
+            micPassed = true;
+            subtext.style.opacity = 0;
+            
+            setTimeout(() => {
+              subtext.textContent = "Your Mic Works Great!";
+              subtext.style.opacity = 1;
+              
+              // Fade in input elements one by one
+              nextElements.forEach((el, i) => {
+                setTimeout(() => el.classList.add('fade-in'), 500 + i * 300);
+              });
+            }, 500);
+          }
+          
+          requestAnimationFrame(updateMeter);
+        }
+        
+        updateMeter();
+      } catch (e) {
+        alert("Microphone access denied. Please allow microphone access to continue.");
+        checkButton.style.display = 'block';
+        volumeMeter.style.display = 'none';
+      }
     });
 
-    wrapper.addEventListener("mouseleave", () => {
-      face.style.transform = `rotateX(0deg) rotateY(0deg)`;
+    // Initialize speech recognition for token and ticker
+    initSpeechRecognition(coinBox, coinText, false);
+    initSpeechRecognition(tickerBox, tickerText, true);
+
+    // Image selection handling
+    imageSelectBtn.addEventListener('click', () => imageInput.click());
+    
+    imageInput.addEventListener('change', () => {
+      if (imageInput.files && imageInput.files[0]) {
+        const fileName = imageInput.files[0].name;
+        imageText.textContent = fileName;
+        imageBox.textContent = fileName;
+        
+        // Update face with selected image
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          faceElement.style.backgroundImage = `url('${e.target.result}')`;
+        };
+        reader.readAsDataURL(imageInput.files[0]);
+        
+        checkDeployStatus();
+      }
+    });
+
+    // Drop area for image
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      imageBox.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+      imageBox.addEventListener(eventName, () => {
+        imageBox.style.backgroundColor = 'rgba(0, 206, 209, 0.2)';
+        imageBox.style.borderStyle = 'solid';
+      }, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+      imageBox.addEventListener(eventName, () => {
+        imageBox.style.backgroundColor = 'rgba(0, 206, 209, 0.05)';
+        imageBox.style.borderStyle = 'dashed';
+      }, false);
+    });
+    
+    imageBox.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      
+      if (files && files[0]) {
+        imageInput.files = files;
+        const fileName = files[0].name;
+        imageText.textContent = fileName;
+        imageBox.textContent = fileName;
+        
+        // Update face with dropped image
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          faceElement.style.backgroundImage = `url('${e.target.result}')`;
+        };
+        reader.readAsDataURL(files[0]);
+        
+        checkDeployStatus();
+      }
+    }, false);
+
+    // Deploy button action
+    deployButton.addEventListener('click', () => {
+      if (deployButton.disabled) return;
+      
+      deployButton.innerHTML = 'UPLOADING... <div class="loading-ring"></div>';
+      deployButton.disabled = true;
+      deployButton.classList.add('deploying');
+      
+      setTimeout(() => {
+        deployButton.innerHTML = 'DEPLOYED SUCCESSFULLY';
+        deployButton.classList.remove('deploying');
+        deployButton.classList.add('success');
+        
+        // Simulate redirect or completion
+        setTimeout(() => {
+          window.location.href = '#completed';
+          alert('Token deployment simulation completed successfully!');
+        }, 1500);
+      }, 3000);
     });
   </script>
 </body>
