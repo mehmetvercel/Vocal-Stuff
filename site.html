@@ -318,61 +318,9 @@
       bottom: 20px;
       padding: 8px 16px;
     }
-    
-    /* Audio controls */
-    .audio-controls {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      background: rgba(0, 0, 0, 0.5);
-      padding: 8px;
-      border-radius: 50px;
-      box-shadow: 0 0 10px rgba(0, 206, 209, 0.3);
-    }
-    
-    .audio-button {
-      background: transparent;
-      border: none;
-      color: var(--primary-color);
-      font-size: 1.2rem;
-      cursor: pointer;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-    }
-    
-    .audio-button:hover {
-      background: rgba(0, 206, 209, 0.1);
-    }
-    
-    .audio-button i {
-      font-size: 1.2rem;
-    }
   </style>
-  <!-- Font Awesome for audio control icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 </head>
 <body>
-  <!-- Hidden audio element -->
-  <audio id="backgroundAudio" loop>
-    <source src="audio.mp3" type="audio/mp3">
-    Your browser does not support the audio element.
-  </audio>
-  
-  <!-- Audio controls -->
-  <div class="audio-controls">
-    <button id="audioToggle" class="audio-button" title="Toggle audio">
-      <i class="fas fa-volume-up"></i>
-    </button>
-  </div>
-  
   <!-- Grid background effect -->
   <div class="grid-background"></div>
   
@@ -469,62 +417,6 @@
     const previewContainer = document.getElementById('previewContainer');
     const previewImage = document.getElementById('previewImage');
     const closePreviewBtn = document.getElementById('closePreviewBtn');
-    const audioElement = document.getElementById('backgroundAudio');
-    const audioToggle = document.getElementById('audioToggle');
-
-    // Audio functionality
-    let audioPlaying = false;
-    
-    // Function to handle audio playback
-    function toggleAudio() {
-      if (audioPlaying) {
-        audioElement.pause();
-        audioToggle.innerHTML = '<i class="fas fa-volume-mute"></i>';
-      } else {
-        // Start playing audio
-        audioElement.play().catch(e => {
-          console.warn("Audio autoplay failed:", e);
-          // Change icon to show it's muted due to browser restrictions
-          audioToggle.innerHTML = '<i class="fas fa-volume-mute"></i>';
-          return;
-        });
-        audioToggle.innerHTML = '<i class="fas fa-volume-up"></i>';
-      }
-      audioPlaying = !audioPlaying;
-    }
-    
-    // Attempt to play audio on page load
-    function playAudioOnLoad() {
-      audioElement.volume = 0.7; // Set volume to 70%
-      audioElement.play().then(() => {
-        audioPlaying = true;
-        audioToggle.innerHTML = '<i class="fas fa-volume-up"></i>';
-      }).catch(e => {
-        console.warn("Audio autoplay failed:", e);
-        audioToggle.innerHTML = '<i class="fas fa-volume-mute"></i>';
-        audioPlaying = false;
-      });
-    }
-    
-    // Attempt to play audio on page load
-    window.addEventListener('load', playAudioOnLoad);
-    
-    // Toggle audio on button click
-    audioToggle.addEventListener('click', toggleAudio);
-    
-    // Play audio on first interaction (addresses most browser autoplay policies)
-    document.addEventListener('click', function initialPlay() {
-      if (!audioPlaying) {
-        audioElement.play().then(() => {
-          audioPlaying = true;
-          audioToggle.innerHTML = '<i class="fas fa-volume-up"></i>';
-        }).catch(e => {
-          console.warn("Audio play failed:", e);
-        });
-      }
-      // Remove this event listener after first click
-      document.removeEventListener('click', initialPlay);
-    }, { once: true });
 
     // Set the face image placeholder
     faceElement.style.backgroundImage = "url('/api/placeholder/200/200')";
@@ -826,4 +718,116 @@
     });
     
     closePreviewBtn.addEventListener('click', function() {
-      previewContainer.style.display = 'none
+      previewContainer.style.display = 'none';
+    });
+    
+    imageInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        const file = this.files[0];
+        imageText.textContent = file.name;
+        
+        // Update image box
+        imageBox.innerHTML = `
+          ${file.name}
+          <button id="previewImageBtn" class="holo-button" style="margin-top: 10px; padding: 5px 10px; font-size: 0.8rem;">
+            Preview Image
+          </button>
+        `;
+        
+        // Set preview button
+        document.getElementById('previewImageBtn').addEventListener('click', function(e) {
+          e.stopPropagation();
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.style.display = 'flex';
+          };
+          reader.readAsDataURL(file);
+        });
+        
+        // Update face
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          faceElement.style.backgroundImage = `url('${e.target.result}')`;
+        };
+        reader.readAsDataURL(file);
+        
+        checkDeployStatus();
+      }
+    });
+
+    // Drag and drop for image
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
+      imageBox.addEventListener(event, function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    });
+    
+    ['dragenter', 'dragover'].forEach(event => {
+      imageBox.addEventListener(event, function() {
+        this.style.backgroundColor = 'rgba(0, 206, 209, 0.2)';
+        this.style.borderStyle = 'solid';
+      });
+    });
+    
+    ['dragleave', 'drop'].forEach(event => {
+      imageBox.addEventListener(event, function() {
+        this.style.backgroundColor = 'rgba(0, 206, 209, 0.05)';
+        this.style.borderStyle = 'dashed';
+      });
+    });
+    
+    imageBox.addEventListener('drop', function(e) {
+      const files = e.dataTransfer.files;
+      if (files && files[0]) {
+        imageInput.files = files;
+        const file = files[0];
+        imageText.textContent = file.name;
+        
+        // Update image box
+        this.innerHTML = `
+          ${file.name}
+          <button id="previewImageBtn" class="holo-button" style="margin-top: 10px; padding: 5px 10px; font-size: 0.8rem;">
+            Preview Image
+          </button>
+        `;
+        
+        // Set preview button
+        document.getElementById('previewImageBtn').addEventListener('click', function(e) {
+          e.stopPropagation();
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.style.display = 'flex';
+          };
+          reader.readAsDataURL(file);
+        });
+        
+        // Update face
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          faceElement.style.backgroundImage = `url('${e.target.result}')`;
+        };
+        reader.readAsDataURL(file);
+        
+        checkDeployStatus();
+      }
+    });
+
+    // Deploy button
+    deployButton.addEventListener('click', function() {
+      this.innerHTML = 'UPLOADING... <div class="loading-ring"></div>';
+      this.disabled = true;
+      
+      setTimeout(() => {
+        this.textContent = 'DEPLOYED SUCCESSFULLY';
+        
+        setTimeout(() => {
+          alert('Token deployment simulation completed!');
+        }, 1000);
+      }, 2000);
+    });
+  </script>
+</body>
+</html>
