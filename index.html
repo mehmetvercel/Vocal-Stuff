@@ -791,13 +791,73 @@
     // Image selection handling
     imageSelectBtn.addEventListener('click', () => imageInput.click());
     
+    // Create image preview container
+    const previewContainer = document.createElement('div');
+    previewContainer.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+    `;
+    
+    const previewImage = document.createElement('img');
+    previewImage.style.cssText = `
+      max-width: 90%;
+      max-height: 80%;
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      box-shadow: 0 0 25px var(--primary-glow);
+    `;
+    
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Close Preview';
+    closeButton.className = 'holo-button';
+    closeButton.style.cssText = `
+      position: absolute;
+      bottom: 20px;
+      padding: 8px 16px;
+    `;
+    
+    previewContainer.appendChild(previewImage);
+    previewContainer.appendChild(closeButton);
+    document.body.appendChild(previewContainer);
+    
+    closeButton.addEventListener('click', () => {
+      previewContainer.style.display = 'none';
+    });
+    
     imageInput.addEventListener('change', () => {
       if (imageInput.files && imageInput.files[0]) {
         const fileName = imageInput.files[0].name;
         imageText.textContent = fileName;
-        imageBox.textContent = fileName;
         
-        // Update face with selected image
+        // Create preview button
+        imageBox.innerHTML = `
+          ${fileName}
+          <button id="previewImageBtn" class="holo-button" style="margin-top: 10px; padding: 5px 10px; font-size: 0.8rem;">
+            Preview Image
+          </button>
+        `;
+        
+        document.getElementById('previewImageBtn').addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent triggering the parent's click event
+          
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            previewImage.src = e.target.result;
+            previewContainer.style.display = 'flex';
+          };
+          reader.readAsDataURL(imageInput.files[0]);
+        });
+        
+        // Update face element with selected image
         const reader = new FileReader();
         reader.onload = (e) => {
           faceElement.style.backgroundImage = `url('${e.target.result}')`;
@@ -840,7 +900,25 @@
         imageInput.files = files;
         const fileName = files[0].name;
         imageText.textContent = fileName;
-        imageBox.textContent = fileName;
+        
+        // Create preview button
+        imageBox.innerHTML = `
+          ${fileName}
+          <button id="previewImageBtn" class="holo-button" style="margin-top: 10px; padding: 5px 10px; font-size: 0.8rem;">
+            Preview Image
+          </button>
+        `;
+        
+        document.getElementById('previewImageBtn').addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent triggering the parent's click event
+          
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            previewImage.src = e.target.result;
+            previewContainer.style.display = 'flex';
+          };
+          reader.readAsDataURL(files[0]);
+        });
         
         // Update face with dropped image
         const reader = new FileReader();
