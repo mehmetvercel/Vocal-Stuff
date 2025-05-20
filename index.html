@@ -542,51 +542,62 @@
     let currentWord = "";
     let displayed = "";
     
-    // Initialize speech synthesis once at the beginning
-    let synth = window.speechSynthesis;
-    let voices = [];
-    
-    // Function to speak the entire phrase at once, more reliably
+    // More robust speech synthesis with user interaction requirement
     function speakFullPhrase() {
-      if (typeof window.speechSynthesis !== 'undefined') {
+      if ('speechSynthesis' in window) {
         try {
           // Cancel any previous speech
-          synth.cancel();
+          window.speechSynthesis.cancel();
           
           // Create a single utterance for the whole phrase
           const utterance = new SpeechSynthesisUtterance(message);
-          utterance.rate = 0.9;  // Slightly slower for better clarity
+          utterance.rate = 0.9;
           utterance.pitch = 1.1;
           utterance.volume = 1;
           utterance.lang = 'en-US';
           
-          // Check if voices are available
-          voices = synth.getVoices();
-          
-          // Try to select a good voice if available
-          if (voices.length > 0) {
-            // Prefer a female English voice for clarity
-            const preferredVoice = voices.find(voice => 
-              voice.name.includes('Female') && 
-              (voice.lang.includes('en-US') || voice.lang.includes('en-GB'))
-            );
-            
-            if (preferredVoice) {
-              utterance.voice = preferredVoice;
-            }
+          // Get voices (this can be asynchronous in some browsers)
+          let voices = window.speechSynthesis.getVoices();
+          if (voices.length === 0) {
+            // Some browsers need to wait for voices to load
+            window.speechSynthesis.onvoiceschanged = function() {
+              voices = window.speechSynthesis.getVoices();
+              utterance.voice = voices[0]; // Default to first voice
+              window.speechSynthesis.speak(utterance);
+            };
+          } else {
+            window.speechSynthesis.speak(utterance);
           }
-          
-          synth.speak(utterance);
         } catch (e) {
           console.error("Speech synthesis error:", e);
         }
       }
     }
     
-    // Call speech once the page is fully loaded
+    // Create a visible button to trigger speech (browsers require user interaction)
+    const speakButton = document.createElement('button');
+    speakButton.className = 'holo-button';
+    speakButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg> Hear Phrase';
+    speakButton.style.position = 'absolute';
+    speakButton.style.top = '10px';
+    speakButton.style.right = '10px';
+    speakButton.style.padding = '8px 12px';
+    speakButton.style.fontSize = '0.8rem';
+    document.body.appendChild(speakButton);
+    
+    speakButton.addEventListener('click', speakFullPhrase);
+    
+    // Also try to speak automatically, but this might not work in all browsers
+    // due to autoplay policies requiring user interaction
     window.addEventListener('load', () => {
-      // Delay speech slightly to ensure the page is fully ready
-      setTimeout(speakFullPhrase, 500);
+      // Try speaking automatically, but this may be blocked
+      setTimeout(() => {
+        try {
+          speakFullPhrase();
+        } catch (e) {
+          console.log("Auto-speech failed, user needs to click button:", e);
+        }
+      }, 1000);
     });
 
     function typeNextChar() {
@@ -599,7 +610,6 @@
           charIndex++;
           setTimeout(typeNextChar, 100);
         } else {
-          // Don't speak individual words anymore - we're using the full phrase approach
           displayed += " ";
           charIndex = 0;
           wordIndex++;
