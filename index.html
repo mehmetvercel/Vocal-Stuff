@@ -533,7 +533,7 @@
     // Start animation
     animate();
 
-    // Typing animation for main text
+    // Typing animation for main text with improved speech synthesis
     const message = "Turn Your Words Into Tokens";
     const words = message.split(" ");
     
@@ -541,6 +541,53 @@
     let charIndex = 0;
     let currentWord = "";
     let displayed = "";
+    
+    // Initialize speech synthesis once at the beginning
+    let synth = window.speechSynthesis;
+    let voices = [];
+    
+    // Function to speak the entire phrase at once, more reliably
+    function speakFullPhrase() {
+      if (typeof window.speechSynthesis !== 'undefined') {
+        try {
+          // Cancel any previous speech
+          synth.cancel();
+          
+          // Create a single utterance for the whole phrase
+          const utterance = new SpeechSynthesisUtterance(message);
+          utterance.rate = 0.9;  // Slightly slower for better clarity
+          utterance.pitch = 1.1;
+          utterance.volume = 1;
+          utterance.lang = 'en-US';
+          
+          // Check if voices are available
+          voices = synth.getVoices();
+          
+          // Try to select a good voice if available
+          if (voices.length > 0) {
+            // Prefer a female English voice for clarity
+            const preferredVoice = voices.find(voice => 
+              voice.name.includes('Female') && 
+              (voice.lang.includes('en-US') || voice.lang.includes('en-GB'))
+            );
+            
+            if (preferredVoice) {
+              utterance.voice = preferredVoice;
+            }
+          }
+          
+          synth.speak(utterance);
+        } catch (e) {
+          console.error("Speech synthesis error:", e);
+        }
+      }
+    }
+    
+    // Call speech once the page is fully loaded
+    window.addEventListener('load', () => {
+      // Delay speech slightly to ensure the page is fully ready
+      setTimeout(speakFullPhrase, 500);
+    });
 
     function typeNextChar() {
       if (wordIndex < words.length) {
@@ -552,15 +599,7 @@
           charIndex++;
           setTimeout(typeNextChar, 100);
         } else {
-          if (typeof window.speechSynthesis !== 'undefined') {
-            const utterance = new SpeechSynthesisUtterance(currentWord);
-            utterance.pitch = 1.2;
-            utterance.rate = 1;
-            utterance.volume = 1;
-            utterance.lang = 'en-US';
-            speechSynthesis.speak(utterance);
-          }
-          
+          // Don't speak individual words anymore - we're using the full phrase approach
           displayed += " ";
           charIndex = 0;
           wordIndex++;
