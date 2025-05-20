@@ -580,22 +580,78 @@
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       
       if (!SpeechRecognition) {
-        targetBox.textContent = "Speech recognition not supported";
-        targetBox.style.color = "red";
+        console.log("Speech recognition not supported");
+        // Instead of showing error, allow text input
+        targetBox.innerHTML = `<input type="text" class="text-input" placeholder="${isTicker ? 'Enter Ticker' : 'Enter Token Name'}" style="padding: 8px; border-radius: 4px; border: 1px solid var(--primary-color); background: rgba(0,0,0,0.2); color: white; width: 80%;">`;
+        
+        const input = targetBox.querySelector('.text-input');
+        input.addEventListener('input', () => {
+          textTarget.textContent = input.value || "N/A";
+          checkDeployStatus();
+        });
         return;
       }
 
+      // Add a simpler, more robust implementation
+      const typeInsteadLink = document.createElement('div');
+      typeInsteadLink.innerHTML = `<div style="margin-top: 10px; font-size: 0.8rem;"><a href="#" class="type-instead" style="color: rgba(0, 206, 209, 0.7);">Type instead</a></div>`;
+      targetBox.appendChild(typeInsteadLink);
+      
+      const addTypeOption = () => {
+        if (!targetBox.querySelector('.type-instead')) {
+          targetBox.appendChild(typeInsteadLink.cloneNode(true));
+          targetBox.querySelector('.type-instead').addEventListener('click', showTextInput);
+        }
+      };
+      
+      const showTextInput = (e) => {
+        if (e) e.preventDefault();
+        const currentText = textTarget.textContent !== "N/A" ? textTarget.textContent : "";
+        targetBox.innerHTML = `<input type="text" class="text-input" value="${currentText}" placeholder="${isTicker ? 'Enter Ticker' : 'Enter Token Name'}" style="padding: 8px; border-radius: 4px; border: 1px solid var(--primary-color); background: rgba(0,0,0,0.2); color: white; width: 80%;">`;
+        
+        const input = targetBox.querySelector('.text-input');
+        input.focus();
+        input.addEventListener('input', () => {
+          textTarget.textContent = input.value || "N/A";
+          checkDeployStatus();
+        });
+      };
+      
+      typeInsteadLink.querySelector('.type-instead').addEventListener('click', showTextInput);
+      
+      // Create a single shared recognition instance
       const recognition = new SpeechRecognition();
       recognition.lang = 'en-US';
+      recognition.continuous = false;
       recognition.interimResults = false;
-
-      targetBox.addEventListener('click', () => {
+      
+      let isListening = false;
+      
+      targetBox.addEventListener('click', (e) => {
+        // Don't trigger if clicking on the type-instead link or already listening
+        if (e.target.classList.contains('type-instead') || isListening) return;
+        
+        // Store the original content
+        const originalContent = targetBox.innerHTML;
+        
+        // Update UI
         targetBox.innerHTML = "Listening... <div class='loading-ring'></div>";
-        recognition.start();
+        isListening = true;
+        
+        try {
+          recognition.start();
+        } catch (err) {
+          console.error('Speech recognition error:', err);
+          targetBox.innerHTML = originalContent;
+          isListening = false;
+          addTypeOption();
+        }
       });
 
       recognition.onresult = (event) => {
         let result = event.results[0][0].transcript.trim();
+        isListening = false;
+        
         if (isTicker) {
           // For ticker, use only the first word, convert to uppercase
           result = result.split(' ')[0].toUpperCase(); 
@@ -603,19 +659,26 @@
         
         textTarget.textContent = result || "N/A";
         targetBox.textContent = result || (isTicker ? "Say A Ticker" : "Say A Token Name");
+        addTypeOption();
         checkDeployStatus();
       };
 
-      recognition.onerror = () => {
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        isListening = false;
         targetBox.textContent = "Try Again";
+        
         setTimeout(() => {
           targetBox.textContent = isTicker ? "Say A Ticker" : "Say A Token Name";
-        }, 2000);
+          addTypeOption();
+        }, 1500);
       };
       
       recognition.onend = () => {
-        if (targetBox.innerHTML.includes("Listening")) {
+        if (isListening) {
+          isListening = false;
           targetBox.textContent = isTicker ? "Say A Ticker" : "Say A Token Name";
+          addTypeOption();
         }
       };
     }
