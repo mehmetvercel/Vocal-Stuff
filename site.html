@@ -203,6 +203,14 @@
       background-color: rgba(0, 206, 209, 0.1);
     }
     
+    .type-instead {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: rgba(0, 206, 209, 0.7);
+      cursor: pointer;
+      text-decoration: none;
+    }
+    
     /* Info display */
     #info-box {
       background: rgba(0, 0, 0, 0.2);
@@ -596,38 +604,99 @@
       }
     });
 
-    // Fixed text input for token and ticker - simplified implementation without speech recognition
-    coinBox.addEventListener('click', function() {
-      if (this.querySelector('input')) return;
+    // Speech recognition function from provided example
+    function initSpeechRecognition(targetBox, textTarget, isTicker = false) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       
-      const value = coinText.textContent !== 'N/A' ? coinText.textContent : '';
-      this.innerHTML = `<input type="text" placeholder="Enter Token Name" style="padding: 8px; width: 80%; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--primary-color); border-radius: 4px;">`;
-      
-      const input = this.querySelector('input');
-      input.value = value;
-      input.focus();
-      
-      input.addEventListener('input', function() {
-        coinText.textContent = this.value || 'N/A';
-        checkDeployStatus();
-      });
-    });
+      if (!SpeechRecognition) {
+        console.log("Speech recognition not supported");
+        // Instead of showing error, allow text input
+        targetBox.innerHTML = `<input type="text" placeholder="${isTicker ? 'Enter Ticker' : 'Enter Token Name'}" style="padding: 8px; width: 80%; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--primary-color); border-radius: 4px;">`;
+        
+        const input = targetBox.querySelector('input');
+        input.addEventListener('input', () => {
+          textTarget.textContent = isTicker ? input.value.toUpperCase() : input.value || "N/A";
+          checkDeployStatus();
+        });
+        return;
+      }
 
-    tickerBox.addEventListener('click', function() {
-      if (this.querySelector('input')) return;
+      // Add a "type instead" option
+      const originalContent = targetBox.innerHTML;
+      targetBox.innerHTML = `${originalContent}<div class="type-instead">Type instead</div>`;
       
-      const value = tickerText.textContent !== 'N/A' ? tickerText.textContent : '';
-      this.innerHTML = `<input type="text" placeholder="Enter Ticker Symbol" style="padding: 8px; width: 80%; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--primary-color); border-radius: 4px;">`;
-      
-      const input = this.querySelector('input');
-      input.value = value;
-      input.focus();
-      
-      input.addEventListener('input', function() {
-        tickerText.textContent = this.value.toUpperCase() || 'N/A';
-        checkDeployStatus();
+      targetBox.querySelector('.type-instead').addEventListener('click', function(e) {
+        e.stopPropagation(); // Prevent bubbling to parent click
+        showTypeInput();
       });
-    });
+      
+      function showTypeInput() {
+        const currentValue = textTarget.textContent !== "N/A" ? textTarget.textContent : "";
+        targetBox.innerHTML = `<input type="text" placeholder="${isTicker ? 'Enter Ticker' : 'Enter Token Name'}" style="padding: 8px; width: 80%; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--primary-color); border-radius: 4px;" value="${currentValue}">`;
+        
+        const input = targetBox.querySelector('input');
+        input.focus();
+        
+        input.addEventListener('input', function() {
+          textTarget.textContent = isTicker ? this.value.toUpperCase() : this.value || "N/A";
+          checkDeployStatus();
+        });
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+
+      targetBox.addEventListener('click', function(e) {
+        // Don't trigger if clicking on the type-instead link
+        if (e.target.classList.contains('type-instead')) return;
+        
+        // Don't trigger if already contains an input
+        if (targetBox.querySelector('input')) return;
+        
+        const originalText = targetBox.textContent.replace('Type instead', '').trim();
+        targetBox.innerHTML = "Listening...";
+        recognition.start();
+      });
+
+      recognition.onresult = function(event) {
+        let result = event.results[0][0].transcript.trim();
+        if (isTicker) {
+          result = result.split(' ')[0]; // only first word
+          result = result.toUpperCase();
+        }
+        
+        textTarget.textContent = result || "N/A";
+        targetBox.innerHTML = `${result || (isTicker ? "Say A Ticker" : "Say A Token Name")}<div class="type-instead">Type instead</div>`;
+        
+        targetBox.querySelector('.type-instead').addEventListener('click', function(e) {
+          e.stopPropagation();
+          showTypeInput();
+        });
+        
+        checkDeployStatus();
+      };
+
+      recognition.onerror = function() {
+        targetBox.innerHTML = `Try Again<div class="type-instead">Type instead</div>`;
+        
+        targetBox.querySelector('.type-instead').addEventListener('click', function(e) {
+          e.stopPropagation();
+          showTypeInput();
+        });
+      };
+      
+      recognition.onend = function() {
+        if (targetBox.textContent === "Listening...") {
+          targetBox.innerHTML = `${isTicker ? "Say A Ticker" : "Say A Token Name"}<div class="type-instead">Type instead</div>`;
+          
+          targetBox.querySelector('.type-instead').addEventListener('click', function(e) {
+            e.stopPropagation();
+            showTypeInput();
+          });
+        }
+      };
+    }
 
     // Check deploy status
     function checkDeployStatus() {
@@ -637,6 +706,10 @@
         imageText.textContent !== 'N/A'
       );
     }
+
+    // Initialize speech recognition for token and ticker
+    initSpeechRecognition(coinBox, coinText, false);
+    initSpeechRecognition(tickerBox, tickerText, true);
 
     // Image handling
     imageSelectBtn.addEventListener('click', function(e) {
