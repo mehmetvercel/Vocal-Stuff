@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Holographic Token Interface</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #00CED1;
+      --primary-glow: rgba(0, 206, 209, 0.6);
+      --dark-bg: #080B16;
+      --light-text: #F0F8FF;
+      --card-bg: rgba(8, 11, 22, 0.7);
+      --grid-color: rgba(0, 206, 209, 0.2);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: linear-gradient(135deg, var(--dark-bg), #0F1A30);
+      color: var(--light-text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    
+    h1, h2, h3, .digital-text {
+      font-family: 'Orbitron', sans-serif;
+      letter-spacing: 1px;
+    }
+    
+    /* Canvas for animated waves */
+    #waveCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    
+    /* Background grid effect */
+    .grid-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
+                        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 50px 50px;
+      z-index: 0;
+      perspective: 800px;
+      transform-style: preserve-3d;
+      transform: rotateX(75deg);
+      opacity: 0.15;
+    }
+    
+    .app-container {
+      position: relative;
+      width: 90%;
+      max-width: 800px;
+      z-index: 10;
+    }
+    
+    .holographic-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 0 25px var(--primary-glow), 
+                  inset 0 0 10px rgba(0, 206, 209, 0.2);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(0, 206, 209, 0.3);
+    }
+    
+    .app-heading {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .app-heading h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(to right, #FFFFFF, var(--primary-color), #FFFFFF);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 15px rgba(0, 206, 209, 0.5);
+    }
+    
+    .app-heading p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      font-weight: 300;
+    }
+    
+    /* Button styles */
+    .holo-button {
+      background: transparent;
+      color: var(--primary-color);
+      border: 1px solid var(--primary-color);
+      border-radius: 6px;
+      padding: 0.8rem 2rem;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 0.5rem;
+    }
+    
+    .holo-button:hover {
+      background: rgba(0, 206, 209, 0.1);
+      box-shadow: 0 0 15px var(--primary-glow);
+      transform: translateY(-2px);
+    }
+    
+    /* Main content sections */
+    .content-section {
+      text-align: center;
+      margin: 2rem 0;
+    }
+    
+    /* Main face display */
+    #face-wrapper {
+      width: 200px;
+      height: 200px;
+      margin: 2rem auto;
+      position: relative;
+    }
+    
+    #face {
+      width: 100%;
+      height: 100%;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      border-radius: 50%;
+      box-shadow: 0 0 50px var(--primary-glow);
+    }
+    
+    /* Typing text effect */
+    #text {
+      font-size: 1.8rem;
+      min-height: 2.5rem;
+      margin: 1.5rem 0;
+      font-family: 'Orbitron', sans-serif;
+      color: var(--primary-color);
+      text-shadow: 0 0 10px rgba(0, 206, 209, 0.5);
+      text-align: center;
+    }
+    
+    /* Volume meter */
+    #volume-meter {
+      display: none;
+      gap: 4px;
+      height: 30px;
+      margin: 1.5rem auto;
+      justify-content: center;
+      width: 80%;
+      max-width: 400px;
+    }
+    
+    .bar {
+      width: 8px;
+      height: 100%;
+      background-color: rgba(0, 206, 209, 0.1);
+      transition: background-color 0.1s;
+      border-radius: 3px;
+    }
+    
+    /* Input boxes */
+    .input-box {
+      width: 80%;
+      max-width: 300px;
+      height: auto;
+      margin: 1rem auto;
+      padding: 1rem;
+      border: 2px dashed var(--primary-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      border-radius: 8px;
+      background-color: rgba(0, 206, 209, 0.05);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    
+    .input-box:hover {
+      background-color: rgba(0, 206, 209, 0.1);
+    }
+    
+    /* Info display */
+    #info-box {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--primary-color);
+      padding: 1.2rem;
+      border-radius: 8px;
+      margin: 1.5rem auto;
+      width: 80%;
+      max-width: 350px;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    
+    #info-box p {
+      margin: 0.7rem 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    #info-box strong {
+      color: var(--primary-color);
+    }
+    
+    /* Animation classes */
+    .fade-in {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
+    
+    /* Hide file input */
+    input[type="file"] {
+      display: none;
+    }
+    
+    /* Page transitions */
+    .slide-in {
+      animation: slideIn 0.6s forwards;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Loading animations */
+    .loading-ring {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+    
+    .loading-ring:after {
+      content: " ";
+      display: block;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 2px solid var(--primary-color);
+      border-color: var(--primary-color) transparent var(--primary-color) transparent;
+      animation: loading-ring 1.2s linear infinite;
+    }
+    
+    @keyframes loading-ring {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+    
+    /* Image preview container */
+    #previewContainer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    
+    #previewImage {
+      max-width: 90%;
+      max-height: 80%;
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      box-shadow: 0 0 25px var(--primary-glow);
+    }
+    
+    #closePreviewBtn {
+      position: absolute;
+      bottom: 20px;
+      padding: 8px 16px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Grid background effect -->
+  <div class="grid-background"></div>
+  
+  <!-- Canvas for animated waves -->
+  <canvas id="waveCanvas"></canvas>
+  
+  <!-- Main app container -->
+  <div class="app-container slide-in">
+    <div class="holographic-card">
+      <div id="homeView">
+        <div class="app-heading">
+          <h1>Holographic Token Interface</h1>
+          <p>Turn your words into digital assets</p>
+        </div>
+        
+        <div id="face-wrapper">
+          <div id="face"></div>
+        </div>
+        
+        <div id="text"></div>
+        
+        <div class="content-section">
+          <button id="actionButton" class="holo-button">Initialize</button>
+        </div>
+      </div>
+      
+      <div id="micCheckView" style="display: none;">
+        <div class="app-heading">
+          <h1>Microphone Check</h1>
+          <p id="subtext">Let's verify your microphone is working</p>
+        </div>
+        
+        <div class="content-section">
+          <button id="checkButton" class="holo-button">Check Microphone</button>
+          
+          <div id="volume-meter">
+            <!-- 20 bars for volume visualization -->
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+          </div>
+        </div>
+        
+        <div id="next-step">
+          <div class="input-box" id="coinBox">Say A Token Name</div>
+          <div class="input-box" id="tickerBox">Say A Ticker</div>
+          <div class="input-box" id="imageBox">
+            Select An Image
+            <button id="imageSelectBtn" class="holo-button" style="margin-top: 0.5rem; padding: 0.4rem 1rem; font-size: 0.8rem;">Browse</button>
+            <input type="file" id="imageInput" accept="image/*" />
+          </div>
+          
+          <div id="info-box">
+            <p><strong>Token:</strong> <span id="coin-text">N/A</span></p>
+            <p><strong>Ticker:</strong> <span id="ticker-text">N/A</span></p>
+            <p><strong>Image:</strong> <span id="image-text">N/A</span></p>
+          </div>
+          
+          <button id="deployButton" class="holo-button" disabled>Deploy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Image preview container -->
+  <div id="previewContainer">
+    <img id="previewImage">
+    <button id="closePreviewBtn" class="holo-button">Close Preview</button>
+  </div>
+
+  <script>
+    // DOM Elements
+    const actionButton = document.getElementById('actionButton');
+    const homeView = document.getElementById('homeView');
+    const micCheckView = document.getElementById('micCheckView');
+    const checkButton = document.getElementById('checkButton');
+    const volumeMeter = document.getElementById('volume-meter');
+    const bars = document.querySelectorAll('.bar');
+    const subtext = document.getElementById('subtext');
+    const nextStep = document.getElementById('next-step');
+    const nextElements = document.querySelectorAll('.input-box, #info-box, #deployButton');
+    const coinText = document.getElementById('coin-text');
+    const tickerText = document.getElementById('ticker-text');
+    const imageText = document.getElementById('image-text');
+    const coinBox = document.getElementById('coinBox');
+    const tickerBox = document.getElementById('tickerBox');
+    const imageBox = document.getElementById('imageBox');
+    const imageInput = document.getElementById('imageInput');
+    const imageSelectBtn = document.getElementById('imageSelectBtn');
+    const deployButton = document.getElementById('deployButton');
+    const faceElement = document.getElementById('face');
+    const textElement = document.getElementById('text');
+    const previewContainer = document.getElementById('previewContainer');
+    const previewImage = document.getElementById('previewImage');
+    const closePreviewBtn = document.getElementById('closePreviewBtn');
+
+    // Set the face image placeholder
+    faceElement.style.backgroundImage = "url('/api/placeholder/200/200')";
+
+    // Canvas setup
+    const canvas = document.getElementById('waveCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    let t = 0;
+
+    // Wave animation function
+    function drawWave(yOffset, freq, amp, speed, color, thickness = 1) {
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height / 2 + yOffset);
+      
+      for (let x = 0; x <= canvas.width; x += 2) {
+        const y = canvas.height / 2 + yOffset + Math.sin((x * freq + t * speed)) * amp;
+        ctx.lineTo(x, y);
+      }
+      
+      ctx.strokeStyle = color;
+      ctx.lineWidth = thickness;
+      ctx.stroke();
+    }
+
+    // Animation loop
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      drawWave(-100, 0.005, 30, 0.3, 'rgba(0, 206, 209, 0.05)', 1.5);
+      drawWave(-60, 0.01, 20, 0.5, 'rgba(0, 206, 209, 0.1)', 1);
+      drawWave(0, 0.015, 25, 0.4, 'rgba(0, 206, 209, 0.15)', 1.5);
+      drawWave(60, 0.011, 22, 0.35, 'rgba(0, 206, 209, 0.1)', 1);
+      
+      t += 0.5;
+      requestAnimationFrame(animate);
+    }
+
+    // Start animation
+    animate();
+
+    // Auto speak after a short delay - attempt to get around browser autoplay restrictions
+    function attemptToSpeak() {
+      const message = "Turn Your Words Into Tokens";
+      
+      if ('speechSynthesis' in window) {
+        try {
+          window.speechSynthesis.cancel();
+          
+          const utterance = new SpeechSynthesisUtterance(message);
+          utterance.rate = 0.9;
+          utterance.pitch = 1.1;
+          utterance.volume = 1;
+          
+          window.speechSynthesis.speak(utterance);
+          console.log("Speech attempted");
+        } catch (e) {
+          console.error("Speech error:", e);
+        }
+      }
+    }
+
+    // Typing animation
+    const message = "Turn Your Words Into Tokens";
+    const words = message.split(" ");
+    
+    let wordIndex = 0;
+    let charIndex = 0;
+    let displayed = "";
+
+    function typeNextChar() {
+      if (wordIndex < words.length) {
+        const currentWord = words[wordIndex];
+        
+        if (charIndex < currentWord.length) {
+          displayed += currentWord.charAt(charIndex);
+          textElement.textContent = displayed + "|";
+          charIndex++;
+          setTimeout(typeNextChar, 100);
+        } else {
+          displayed += " ";
+          charIndex = 0;
+          wordIndex++;
+          setTimeout(typeNextChar, 300);
+        }
+      } else {
+        textElement.textContent = displayed.trim();
+      }
+    }
+
+    // Start typing on page load, try to speak
+    window.addEventListener('load', function() {
+      typeNextChar();
+      
+      // Try to speak immediately
+      attemptToSpeak();
+      
+      // Also try after a user interaction (fallback)
+      document.body.addEventListener('click', function speakOnce() {
+        attemptToSpeak();
+        document.body.removeEventListener('click', speakOnce);
+      }, { once: true });
+    });
+
+    // Action button (Initialize)
+    actionButton.addEventListener('click', function() {
+      homeView.style.display = 'none';
+      micCheckView.style.display = 'block';
+      micCheckView.classList.add('slide-in');
+    });
+
+    // Add microphone bypass option
+    checkButton.innerHTML += '<div style="margin-top: 10px; font-size: 0.8rem;"><a href="#" id="bypassMic" style="color: rgba(0, 206, 209, 0.7);">Skip microphone check</a></div>';
+    
+    document.getElementById('bypassMic').addEventListener('click', function(e) {
+      e.preventDefault();
+      checkButton.style.display = 'none';
+      volumeMeter.style.display = 'none';
+      subtext.textContent = "Microphone check skipped";
+      
+      // Show next elements
+      nextElements.forEach((el, i) => {
+        setTimeout(() => el.classList.add('fade-in'), 300 + i * 300);
+      });
+    });
+
+    // Microphone check
+    checkButton.addEventListener('click', async function() {
+      try {
+        checkButton.style.display = 'none';
+        volumeMeter.style.display = 'flex';
+        
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const context = new AudioContext();
+        const source = context.createMediaStreamSource(stream);
+        const analyser = context.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+        function updateMeter() {
+          analyser.getByteFrequencyData(dataArray);
+          const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+          const activeBars = Math.floor((volume / 255) * bars.length);
+
+          bars.forEach((bar, i) => {
+            bar.style.backgroundColor = i < activeBars 
+              ? `rgba(0, 206, 209, ${0.1 + (i / bars.length)})`
+              : 'rgba(0, 206, 209, 0.1)';
+          });
+          
+          // Auto-proceed after 5 seconds or if sound detected
+          if (volume > 20 || Date.now() - startTime > 5000) {
+            clearInterval(meterInterval);
+            subtext.textContent = "Your Mic Works Great!";
+            
+            // Show next elements
+            nextElements.forEach((el, i) => {
+              setTimeout(() => el.classList.add('fade-in'), 500 + i * 300);
+            });
+          }
+        }
+        
+        const startTime = Date.now();
+        const meterInterval = setInterval(updateMeter, 50);
+      } catch (e) {
+        console.error("Mic error:", e);
+        checkButton.style.display = 'none';
+        subtext.textContent = "Couldn't access microphone. Proceeding anyway...";
+        
+        // Still proceed
+        setTimeout(() => {
+          nextElements.forEach((el, i) => {
+            setTimeout(() => el.classList.add('fade-in'), 500 + i * 300);
+          });
+        }, 1000);
+      }
+    });
+
+    // Fixed text input for token and ticker - simplified implementation without speech recognition
+    coinBox.addEventListener('click', function() {
+      if (this.querySelector('input')) return;
+      
+      const value = coinText.textContent !== 'N/A' ? coinText.textContent : '';
+      this.innerHTML = `<input type="text" placeholder="Enter Token Name" style="padding: 8px; width: 80%; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--primary-color); border-radius: 4px;">`;
+      
+      const input = this.querySelector('input');
+      input.value = value;
+      input.focus();
+      
+      input.addEventListener('input', function() {
+        coinText.textContent = this.value || 'N/A';
+        checkDeployStatus();
+      });
+    });
+
+    tickerBox.addEventListener('click', function() {
+      if (this.querySelector('input')) return;
+      
+      const value = tickerText.textContent !== 'N/A' ? tickerText.textContent : '';
+      this.innerHTML = `<input type="text" placeholder="Enter Ticker Symbol" style="padding: 8px; width: 80%; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--primary-color); border-radius: 4px;">`;
+      
+      const input = this.querySelector('input');
+      input.value = value;
+      input.focus();
+      
+      input.addEventListener('input', function() {
+        tickerText.textContent = this.value.toUpperCase() || 'N/A';
+        checkDeployStatus();
+      });
+    });
+
+    // Check deploy status
+    function checkDeployStatus() {
+      deployButton.disabled = !(
+        coinText.textContent !== 'N/A' && 
+        tickerText.textContent !== 'N/A' && 
+        imageText.textContent !== 'N/A'
+      );
+    }
+
+    // Image handling
+    imageSelectBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      imageInput.click();
+    });
+    
+    closePreviewBtn.addEventListener('click', function() {
+      previewContainer.style.display = 'none';
+    });
+    
+    imageInput.addEventListener('change', function() {
+      if (this.files && this.files[0]) {
+        const file = this.files[0];
+        imageText.textContent = file.name;
+        
+        // Update image box
+        imageBox.innerHTML = `
+          ${file.name}
+          <button id="previewImageBtn" class="holo-button" style="margin-top: 10px; padding: 5px 10px; font-size: 0.8rem;">
+            Preview Image
+          </button>
+        `;
+        
+        // Set preview button
+        document.getElementById('previewImageBtn').addEventListener('click', function(e) {
+          e.stopPropagation();
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.style.display = 'flex';
+          };
+          reader.readAsDataURL(file);
+        });
+        
+        // Update face
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          faceElement.style.backgroundImage = `url('${e.target.result}')`;
+        };
+        reader.readAsDataURL(file);
+        
+        checkDeployStatus();
+      }
+    });
+
+    // Drag and drop for image
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
+      imageBox.addEventListener(event, function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    });
+    
+    ['dragenter', 'dragover'].forEach(event => {
+      imageBox.addEventListener(event, function() {
+        this.style.backgroundColor = 'rgba(0, 206, 209, 0.2)';
+        this.style.borderStyle = 'solid';
+      });
+    });
+    
+    ['dragleave', 'drop'].forEach(event => {
+      imageBox.addEventListener(event, function() {
+        this.style.backgroundColor = 'rgba(0, 206, 209, 0.05)';
+        this.style.borderStyle = 'dashed';
+      });
+    });
+    
+    imageBox.addEventListener('drop', function(e) {
+      const files = e.dataTransfer.files;
+      if (files && files[0]) {
+        imageInput.files = files;
+        const file = files[0];
+        imageText.textContent = file.name;
+        
+        // Update image box
+        this.innerHTML = `
+          ${file.name}
+          <button id="previewImageBtn" class="holo-button" style="margin-top: 10px; padding: 5px 10px; font-size: 0.8rem;">
+            Preview Image
+          </button>
+        `;
+        
+        // Set preview button
+        document.getElementById('previewImageBtn').addEventListener('click', function(e) {
+          e.stopPropagation();
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.style.display = 'flex';
+          };
+          reader.readAsDataURL(file);
+        });
+        
+        // Update face
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          faceElement.style.backgroundImage = `url('${e.target.result}')`;
+        };
+        reader.readAsDataURL(file);
+        
+        checkDeployStatus();
+      }
+    });
+
+    // Deploy button
+    deployButton.addEventListener('click', function() {
+      this.innerHTML = 'UPLOADING... <div class="loading-ring"></div>';
+      this.disabled = true;
+      
+      setTimeout(() => {
+        this.textContent = 'DEPLOYED SUCCESSFULLY';
+        
+        setTimeout(() => {
+          alert('Token deployment simulation completed!');
+        }, 1000);
+      }, 2000);
+    });
+  </script>
+</body>
+</html>
