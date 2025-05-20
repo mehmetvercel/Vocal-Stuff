@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Holographic Token Interface</title>
+  <title>Holographic Interface</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -11,8 +11,6 @@
       --primary-glow: rgba(0, 206, 209, 0.6);
       --dark-bg: #080B16;
       --light-text: #F0F8FF;
-      --card-bg: rgba(8, 11, 22, 0.7);
-      --grid-color: rgba(0, 206, 209, 0.2);
     }
     
     * {
@@ -34,63 +32,17 @@
       position: relative;
     }
     
-    h1, h2, h3, .digital-text {
-      font-family: 'Orbitron', sans-serif;
-      letter-spacing: 1px;
-    }
-    
-    /* Canvas for animated waves */
-    #waveCanvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-    }
-    
-    /* Background grid effect */
-    .grid-background {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: linear-gradient(var(--grid-color) 1px, transparent 1px),
-                        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-      background-size: 50px 50px;
-      z-index: 0;
-      perspective: 800px;
-      transform-style: preserve-3d;
-      transform: rotateX(75deg);
-      opacity: 0.15;
-    }
-    
-    .app-container {
-      position: relative;
-      width: 90%;
-      max-width: 800px;
-      z-index: 10;
-    }
-    
-    .holographic-card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 0 25px var(--primary-glow), 
-                  inset 0 0 10px rgba(0, 206, 209, 0.2);
-      backdrop-filter: blur(5px);
-      border: 1px solid rgba(0, 206, 209, 0.3);
-    }
-    
-    .app-heading {
+    .main-content {
       text-align: center;
-      margin-bottom: 1.5rem;
+      z-index: 10;
+      max-width: 800px;
+      padding: 2rem;
     }
     
-    .app-heading h1 {
+    .welcome-title {
+      font-family: 'Orbitron', sans-serif;
       font-size: 2.5rem;
-      margin-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
       background: linear-gradient(to right, #FFFFFF, var(--primary-color), #FFFFFF);
       -webkit-background-clip: text;
       background-clip: text;
@@ -98,735 +50,209 @@
       text-shadow: 0 0 15px rgba(0, 206, 209, 0.5);
     }
     
-    .app-heading p {
-      font-size: 1.1rem;
-      opacity: 0.9;
-      font-weight: 300;
+    .content-text {
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      line-height: 1.6;
     }
     
-    /* Button styles */
-    .holo-button {
+    .audio-controls {
+      margin-top: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .control-button {
       background: transparent;
       color: var(--primary-color);
-      border: 1px solid var(--primary-color);
+      border: 2px solid var(--primary-color);
       border-radius: 6px;
-      padding: 0.8rem 2rem;
+      padding: 0.8rem 1.5rem;
       font-family: 'Orbitron', sans-serif;
       font-size: 1rem;
       cursor: pointer;
       transition: all 0.3s ease;
       margin: 0.5rem;
+      letter-spacing: 1px;
     }
     
-    .holo-button:hover {
+    .control-button:hover {
       background: rgba(0, 206, 209, 0.1);
       box-shadow: 0 0 15px var(--primary-glow);
       transform: translateY(-2px);
     }
     
-    /* Main content sections */
-    .content-section {
-      text-align: center;
-      margin: 2rem 0;
-    }
-    
-    /* Main face display */
-    #face-wrapper {
-      width: 200px;
-      height: 200px;
-      margin: 2rem auto;
-      position: relative;
-    }
-    
-    #face {
-      width: 100%;
-      height: 100%;
-      background-size: contain;
-      background-repeat: no-repeat;
-      background-position: center;
-      border-radius: 50%;
-      box-shadow: 0 0 50px var(--primary-glow);
-    }
-    
-    /* Typing text effect */
-    #text {
-      font-size: 1.8rem;
-      min-height: 2.5rem;
-      margin: 1.5rem 0;
-      font-family: 'Orbitron', sans-serif;
-      color: var(--primary-color);
-      text-shadow: 0 0 10px rgba(0, 206, 209, 0.5);
-      text-align: center;
-    }
-    
-    /* Volume meter */
-    #volume-meter {
-      display: none;
-      gap: 4px;
-      height: 30px;
-      margin: 1.5rem auto;
+    /* Animation for audio visualization */
+    .audio-visualizer {
+      margin-top: 2rem;
+      display: flex;
+      align-items: center;
       justify-content: center;
-      width: 80%;
-      max-width: 400px;
+      gap: 5px;
+      height: 60px;
     }
     
-    .bar {
+    .visualizer-bar {
       width: 8px;
-      height: 100%;
-      background-color: rgba(0, 206, 209, 0.1);
-      transition: background-color 0.1s;
-      border-radius: 3px;
+      background-color: var(--primary-color);
+      border-radius: 4px;
+      height: 5px;
+      transition: height 0.2s ease;
     }
     
-    /* Input boxes */
-    .input-box {
-      width: 80%;
-      max-width: 300px;
-      height: auto;
-      margin: 1rem auto;
-      padding: 1rem;
-      border: 2px dashed var(--primary-color);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      border-radius: 8px;
-      background-color: rgba(0, 206, 209, 0.05);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    
-    .input-box:hover {
-      background-color: rgba(0, 206, 209, 0.1);
-    }
-    
-    .type-instead {
-      margin-top: 10px;
-      font-size: 0.8rem;
-      color: rgba(0, 206, 209, 0.7);
-      cursor: pointer;
-      text-decoration: none;
-    }
-    
-    /* Info display */
-    #info-box {
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid var(--primary-color);
-      padding: 1.2rem;
-      border-radius: 8px;
-      margin: 1.5rem auto;
-      width: 80%;
-      max-width: 350px;
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    
-    #info-box p {
-      margin: 0.7rem 0;
-      display: flex;
-      justify-content: space-between;
-    }
-    
-    #info-box strong {
-      color: var(--primary-color);
-    }
-    
-    /* Animation classes */
-    .fade-in {
-      opacity: 1 !important;
-      transform: translateY(0) !important;
-    }
-    
-    /* Hide file input */
-    input[type="file"] {
-      display: none;
-    }
-    
-    /* Page transitions */
-    .slide-in {
-      animation: slideIn 0.6s forwards;
-    }
-    
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    /* Loading animations */
-    .loading-ring {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      margin-left: 10px;
-      vertical-align: middle;
-    }
-    
-    .loading-ring:after {
-      content: " ";
-      display: block;
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      border: 2px solid var(--primary-color);
-      border-color: var(--primary-color) transparent var(--primary-color) transparent;
-      animation: loading-ring 1.2s linear infinite;
-    }
-    
-    @keyframes loading-ring {
-      0% {
-        transform: rotate(0deg);
-      }
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-    
-    /* Image preview container */
-    #previewContainer {
+    /* Notification for audio */
+    .audio-notification {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.8);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      padding: 20px;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      color: var(--light-text);
+      padding: 1rem;
+      border-radius: 4px;
+      border-left: 4px solid var(--primary-color);
+      font-family: 'Roboto', sans-serif;
+      transform: translateX(120%);
+      transition: transform 0.5s ease;
     }
     
-    #previewImage {
-      max-width: 90%;
-      max-height: 80%;
-      border: 2px solid var(--primary-color);
-      border-radius: 8px;
-      box-shadow: 0 0 25px var(--primary-glow);
-    }
-    
-    #closePreviewBtn {
-      position: absolute;
-      bottom: 20px;
-      padding: 8px 16px;
+    .audio-notification.show {
+      transform: translateX(0);
     }
   </style>
 </head>
 <body>
-  <!-- Grid background effect -->
-  <div class="grid-background"></div>
+  <!-- Audio element -->
+  <audio id="backgroundAudio" src="audio.mp3" preload="auto"></audio>
   
-  <!-- Canvas for animated waves -->
-  <canvas id="waveCanvas"></canvas>
+  <!-- Audio notification -->
+  <div id="audioNotification" class="audio-notification">
+    Audio is now playing. Click anywhere to pause/play.
+  </div>
   
-  <!-- Main app container -->
-  <div class="app-container slide-in">
-    <div class="holographic-card">
-      <div id="homeView">
-        <div class="app-heading">
-          <h1>Holographic Token Interface</h1>
-          <p>Turn your words into digital assets</p>
-        </div>
-        
-        <div id="face-wrapper">
-          <div id="face"></div>
-        </div>
-        
-        <div id="text"></div>
-        
-        <div class="content-section">
-          <button id="actionButton" class="holo-button">Initialize</button>
-        </div>
-      </div>
-      
-      <div id="micCheckView" style="display: none;">
-        <div class="app-heading">
-          <h1>Microphone Check</h1>
-          <p id="subtext">Let's verify your microphone is working</p>
-        </div>
-        
-        <div class="content-section">
-          <button id="checkButton" class="holo-button">Check Microphone</button>
-          
-          <div id="volume-meter">
-            <!-- 20 bars for volume visualization -->
-            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-          </div>
-        </div>
-        
-        <div id="next-step">
-          <div class="input-box" id="coinBox">Say A Token Name</div>
-          <div class="input-box" id="tickerBox">Say A Ticker</div>
-          <div class="input-box" id="imageBox">
-            Select An Image
-            <button id="imageSelectBtn" class="holo-button" style="margin-top: 0.5rem; padding: 0.4rem 1rem; font-size: 0.8rem;">Browse</button>
-            <input type="file" id="imageInput" accept="image/*" />
-          </div>
-          
-          <div id="info-box">
-            <p><strong>Token:</strong> <span id="coin-text">N/A</span></p>
-            <p><strong>Ticker:</strong> <span id="ticker-text">N/A</span></p>
-            <p><strong>Image:</strong> <span id="image-text">N/A</span></p>
-          </div>
-          
-          <button id="deployButton" class="holo-button" disabled>Deploy</button>
-        </div>
-      </div>
+  <div class="main-content">
+    <h1 class="welcome-title">Welcome to the Holographic Interface</h1>
+    <p class="content-text">
+      You have successfully entered the holographic space. This immersive experience combines visual and audio elements to create a unique digital environment. Explore the features and discover new possibilities.
+    </p>
+    
+    <div class="audio-controls">
+      <button id="toggleAudio" class="control-button">PAUSE AUDIO</button>
+    </div>
+    
+    <!-- Audio visualizer -->
+    <div class="audio-visualizer" id="visualizer">
+      <!-- Bars will be added by JS -->
     </div>
   </div>
   
-  <!-- Image preview container -->
-  <div id="previewContainer">
-    <img id="previewImage">
-    <button id="closePreviewBtn" class="holo-button">Close Preview</button>
-  </div>
-
   <script>
-    // DOM Elements
-    const actionButton = document.getElementById('actionButton');
-    const homeView = document.getElementById('homeView');
-    const micCheckView = document.getElementById('micCheckView');
-    const checkButton = document.getElementById('checkButton');
-    const volumeMeter = document.getElementById('volume-meter');
-    const bars = document.querySelectorAll('.bar');
-    const subtext = document.getElementById('subtext');
-    const nextStep = document.getElementById('next-step');
-    const nextElements = document.querySelectorAll('.input-box, #info-box, #deployButton');
-    const coinText = document.getElementById('coin-text');
-    const tickerText = document.getElementById('ticker-text');
-    const imageText = document.getElementById('image-text');
-    const coinBox = document.getElementById('coinBox');
-    const tickerBox = document.getElementById('tickerBox');
-    const imageBox = document.getElementById('imageBox');
-    const imageInput = document.getElementById('imageInput');
-    const imageSelectBtn = document.getElementById('imageSelectBtn');
-    const deployButton = document.getElementById('deployButton');
-    const faceElement = document.getElementById('face');
-    const textElement = document.getElementById('text');
-    const previewContainer = document.getElementById('previewContainer');
-    const previewImage = document.getElementById('previewImage');
-    const closePreviewBtn = document.getElementById('closePreviewBtn');
-
-    // Set the face image placeholder
-    faceElement.style.backgroundImage = "url('/api/placeholder/200/200')";
-
-    // Canvas setup
-    const canvas = document.getElementById('waveCanvas');
-    const ctx = canvas.getContext('2d');
-
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    let t = 0;
-
-    // Wave animation function
-    function drawWave(yOffset, freq, amp, speed, color, thickness = 1) {
-      ctx.beginPath();
-      ctx.moveTo(0, canvas.height / 2 + yOffset);
+    document.addEventListener('DOMContentLoaded', function() {
+      // Audio element
+      const audio = document.getElementById('backgroundAudio');
+      const toggleBtn = document.getElementById('toggleAudio');
+      const notification = document.getElementById('audioNotification');
       
-      for (let x = 0; x <= canvas.width; x += 2) {
-        const y = canvas.height / 2 + yOffset + Math.sin((x * freq + t * speed)) * amp;
-        ctx.lineTo(x, y);
+      // Create audio context for visualization
+      let audioContext, analyser, dataArray;
+      const visualizer = document.getElementById('visualizer');
+      const NUM_BARS = 20;
+      
+      // Create visualizer bars
+      for (let i = 0; i < NUM_BARS; i++) {
+        const bar = document.createElement('div');
+        bar.className = 'visualizer-bar';
+        visualizer.appendChild(bar);
       }
       
-      ctx.strokeStyle = color;
-      ctx.lineWidth = thickness;
-      ctx.stroke();
-    }
-
-    // Animation loop
-    function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const visualizerBars = document.querySelectorAll('.visualizer-bar');
       
-      drawWave(-100, 0.005, 30, 0.3, 'rgba(0, 206, 209, 0.05)', 1.5);
-      drawWave(-60, 0.01, 20, 0.5, 'rgba(0, 206, 209, 0.1)', 1);
-      drawWave(0, 0.015, 25, 0.4, 'rgba(0, 206, 209, 0.15)', 1.5);
-      drawWave(60, 0.011, 22, 0.35, 'rgba(0, 206, 209, 0.1)', 1);
-      
-      t += 0.5;
-      requestAnimationFrame(animate);
-    }
-
-    // Start animation
-    animate();
-
-    // Auto speak after a short delay - attempt to get around browser autoplay restrictions
-    function attemptToSpeak() {
-      const message = "Turn Your Words Into Tokens";
-      
-      if ('speechSynthesis' in window) {
-        try {
-          window.speechSynthesis.cancel();
-          
-          const utterance = new SpeechSynthesisUtterance(message);
-          utterance.rate = 0.9;
-          utterance.pitch = 1.1;
-          utterance.volume = 1;
-          
-          window.speechSynthesis.speak(utterance);
-          console.log("Speech attempted");
-        } catch (e) {
-          console.error("Speech error:", e);
-        }
-      }
-    }
-
-    // Typing animation
-    const message = "Turn Your Words Into Tokens";
-    const words = message.split(" ");
-    
-    let wordIndex = 0;
-    let charIndex = 0;
-    let displayed = "";
-
-    function typeNextChar() {
-      if (wordIndex < words.length) {
-        const currentWord = words[wordIndex];
-        
-        if (charIndex < currentWord.length) {
-          displayed += currentWord.charAt(charIndex);
-          textElement.textContent = displayed + "|";
-          charIndex++;
-          setTimeout(typeNextChar, 100);
-        } else {
-          displayed += " ";
-          charIndex = 0;
-          wordIndex++;
-          setTimeout(typeNextChar, 300);
-        }
-      } else {
-        textElement.textContent = displayed.trim();
-      }
-    }
-
-    // Start typing on page load, try to speak
-    window.addEventListener('load', function() {
-      typeNextChar();
-      
-      // Try to speak immediately
-      attemptToSpeak();
-      
-      // Also try after a user interaction (fallback)
-      document.body.addEventListener('click', function speakOnce() {
-        attemptToSpeak();
-        document.body.removeEventListener('click', speakOnce);
-      }, { once: true });
-    });
-
-    // Action button (Initialize)
-    actionButton.addEventListener('click', function() {
-      homeView.style.display = 'none';
-      micCheckView.style.display = 'block';
-      micCheckView.classList.add('slide-in');
-    });
-
-    // Add microphone bypass option
-    checkButton.innerHTML += '<div style="margin-top: 10px; font-size: 0.8rem;"><a href="#" id="bypassMic" style="color: rgba(0, 206, 209, 0.7);">Skip microphone check</a></div>';
-    
-    document.getElementById('bypassMic').addEventListener('click', function(e) {
-      e.preventDefault();
-      checkButton.style.display = 'none';
-      volumeMeter.style.display = 'none';
-      subtext.textContent = "Microphone check skipped";
-      
-      // Show next elements
-      nextElements.forEach((el, i) => {
-        setTimeout(() => el.classList.add('fade-in'), 300 + i * 300);
-      });
-    });
-
-    // Microphone check
-    checkButton.addEventListener('click', async function() {
-      try {
-        checkButton.style.display = 'none';
-        volumeMeter.style.display = 'flex';
-        
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const context = new AudioContext();
-        const source = context.createMediaStreamSource(stream);
-        const analyser = context.createAnalyser();
-        analyser.fftSize = 256;
-        source.connect(analyser);
-        const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-        function updateMeter() {
-          analyser.getByteFrequencyData(dataArray);
-          const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-          const activeBars = Math.floor((volume / 255) * bars.length);
-
-          bars.forEach((bar, i) => {
-            bar.style.backgroundColor = i < activeBars 
-              ? `rgba(0, 206, 209, ${0.1 + (i / bars.length)})`
-              : 'rgba(0, 206, 209, 0.1)';
-          });
-          
-          // Auto-proceed after 5 seconds or if sound detected
-          if (volume > 20 || Date.now() - startTime > 5000) {
-            clearInterval(meterInterval);
-            subtext.textContent = "Your Mic Works Great!";
+      // Play audio automatically when page loads
+      // Note: This may not work on all browsers due to autoplay policies
+      function playAudio() {
+        audio.play()
+          .then(() => {
+            console.log('Audio is playing');
+            setupAudioContext();
+            showNotification();
+          })
+          .catch(err => {
+            console.error('Could not play audio automatically:', err);
+            // Show a message to the user to interact with the page first
+            notification.textContent = 'Click anywhere to start audio playback';
+            notification.classList.add('show');
             
-            // Show next elements
-            nextElements.forEach((el, i) => {
-              setTimeout(() => el.classList.add('fade-in'), 500 + i * 300);
-            });
-          }
-        }
-        
-        const startTime = Date.now();
-        const meterInterval = setInterval(updateMeter, 50);
-      } catch (e) {
-        console.error("Mic error:", e);
-        checkButton.style.display = 'none';
-        subtext.textContent = "Couldn't access microphone. Proceeding anyway...";
-        
-        // Still proceed
-        setTimeout(() => {
-          nextElements.forEach((el, i) => {
-            setTimeout(() => el.classList.add('fade-in'), 500 + i * 300);
+            // Allow clicking anywhere to start audio
+            document.body.addEventListener('click', function bodyClick() {
+              audio.play()
+                .then(() => {
+                  setupAudioContext();
+                  document.body.removeEventListener('click', bodyClick);
+                })
+                .catch(err => console.error('Still could not play audio:', err));
+            }, { once: true });
           });
-        }, 1000);
       }
-    });
-
-    // Speech recognition function from provided example
-    function initSpeechRecognition(targetBox, textTarget, isTicker = false) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       
-      if (!SpeechRecognition) {
-        console.log("Speech recognition not supported");
-        // Instead of showing error, allow text input
-        targetBox.innerHTML = `<input type="text" placeholder="${isTicker ? 'Enter Ticker' : 'Enter Token Name'}" style="padding: 8px; width: 80%; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--primary-color); border-radius: 4px;">`;
+      // Setup audio context for visualization
+      function setupAudioContext() {
+        if (audioContext) return;
         
-        const input = targetBox.querySelector('input');
-        input.addEventListener('input', () => {
-          textTarget.textContent = isTicker ? input.value.toUpperCase() : input.value || "N/A";
-          checkDeployStatus();
-        });
-        return;
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        
+        const source = audioContext.createMediaElementSource(audio);
+        source.connect(analyser);
+        analyser.connect(audioContext.destination);
+        
+        analyser.fftSize = 64;
+        const bufferLength = analyser.frequencyBinCount;
+        dataArray = new Uint8Array(bufferLength);
+        
+        // Start visualization
+        visualize();
       }
-
-      // Add a "type instead" option
-      const originalContent = targetBox.innerHTML;
-      targetBox.innerHTML = `${originalContent}<div class="type-instead">Type instead</div>`;
       
-      targetBox.querySelector('.type-instead').addEventListener('click', function(e) {
-        e.stopPropagation(); // Prevent bubbling to parent click
-        showTypeInput();
-      });
-      
-      function showTypeInput() {
-        const currentValue = textTarget.textContent !== "N/A" ? textTarget.textContent : "";
-        targetBox.innerHTML = `<input type="text" placeholder="${isTicker ? 'Enter Ticker' : 'Enter Token Name'}" style="padding: 8px; width: 80%; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--primary-color); border-radius: 4px;" value="${currentValue}">`;
+      // Audio visualization function
+      function visualize() {
+        if (!analyser) return;
         
-        const input = targetBox.querySelector('input');
-        input.focus();
+        analyser.getByteFrequencyData(dataArray);
         
-        input.addEventListener('input', function() {
-          textTarget.textContent = isTicker ? this.value.toUpperCase() : this.value || "N/A";
-          checkDeployStatus();
-        });
-      }
-
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'en-US';
-      recognition.interimResults = false;
-
-      targetBox.addEventListener('click', function(e) {
-        // Don't trigger if clicking on the type-instead link
-        if (e.target.classList.contains('type-instead')) return;
-        
-        // Don't trigger if already contains an input
-        if (targetBox.querySelector('input')) return;
-        
-        const originalText = targetBox.textContent.replace('Type instead', '').trim();
-        targetBox.innerHTML = "Listening...";
-        recognition.start();
-      });
-
-      recognition.onresult = function(event) {
-        let result = event.results[0][0].transcript.trim();
-        if (isTicker) {
-          result = result.split(' ')[0]; // only first word
-          result = result.toUpperCase();
-        }
-        
-        textTarget.textContent = result || "N/A";
-        targetBox.innerHTML = `${result || (isTicker ? "Say A Ticker" : "Say A Token Name")}<div class="type-instead">Type instead</div>`;
-        
-        targetBox.querySelector('.type-instead').addEventListener('click', function(e) {
-          e.stopPropagation();
-          showTypeInput();
-        });
-        
-        checkDeployStatus();
-      };
-
-      recognition.onerror = function() {
-        targetBox.innerHTML = `Try Again<div class="type-instead">Type instead</div>`;
-        
-        targetBox.querySelector('.type-instead').addEventListener('click', function(e) {
-          e.stopPropagation();
-          showTypeInput();
-        });
-      };
-      
-      recognition.onend = function() {
-        if (targetBox.textContent === "Listening...") {
-          targetBox.innerHTML = `${isTicker ? "Say A Ticker" : "Say A Token Name"}<div class="type-instead">Type instead</div>`;
+        // Update bars
+        for (let i = 0; i < NUM_BARS; i++) {
+          const index = Math.floor(i * dataArray.length / NUM_BARS);
+          const value = dataArray[index];
+          const height = Math.max(value / 2, 5); // Minimum height of 5px
           
-          targetBox.querySelector('.type-instead').addEventListener('click', function(e) {
-            e.stopPropagation();
-            showTypeInput();
-          });
+          visualizerBars[i].style.height = `${height}px`;
         }
-      };
-    }
-
-    // Check deploy status
-    function checkDeployStatus() {
-      deployButton.disabled = !(
-        coinText.textContent !== 'N/A' && 
-        tickerText.textContent !== 'N/A' && 
-        imageText.textContent !== 'N/A'
-      );
-    }
-
-    // Initialize speech recognition for token and ticker
-    initSpeechRecognition(coinBox, coinText, false);
-    initSpeechRecognition(tickerBox, tickerText, true);
-
-    // Image handling
-    imageSelectBtn.addEventListener('click', function(e) {
-      e.stopPropagation();
-      imageInput.click();
-    });
-    
-    closePreviewBtn.addEventListener('click', function() {
-      previewContainer.style.display = 'none';
-    });
-    
-    imageInput.addEventListener('change', function() {
-      if (this.files && this.files[0]) {
-        const file = this.files[0];
-        imageText.textContent = file.name;
         
-        // Update image box
-        imageBox.innerHTML = `
-          ${file.name}
-          <button id="previewImageBtn" class="holo-button" style="margin-top: 10px; padding: 5px 10px; font-size: 0.8rem;">
-            Preview Image
-          </button>
-        `;
-        
-        // Set preview button
-        document.getElementById('previewImageBtn').addEventListener('click', function(e) {
-          e.stopPropagation();
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            previewImage.src = e.target.result;
-            previewContainer.style.display = 'flex';
-          };
-          reader.readAsDataURL(file);
-        });
-        
-        // Update face
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          faceElement.style.backgroundImage = `url('${e.target.result}')`;
-        };
-        reader.readAsDataURL(file);
-        
-        checkDeployStatus();
+        requestAnimationFrame(visualize);
       }
-    });
-
-    // Drag and drop for image
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(event => {
-      imageBox.addEventListener(event, function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-      });
-    });
-    
-    ['dragenter', 'dragover'].forEach(event => {
-      imageBox.addEventListener(event, function() {
-        this.style.backgroundColor = 'rgba(0, 206, 209, 0.2)';
-        this.style.borderStyle = 'solid';
-      });
-    });
-    
-    ['dragleave', 'drop'].forEach(event => {
-      imageBox.addEventListener(event, function() {
-        this.style.backgroundColor = 'rgba(0, 206, 209, 0.05)';
-        this.style.borderStyle = 'dashed';
-      });
-    });
-    
-    imageBox.addEventListener('drop', function(e) {
-      const files = e.dataTransfer.files;
-      if (files && files[0]) {
-        imageInput.files = files;
-        const file = files[0];
-        imageText.textContent = file.name;
-        
-        // Update image box
-        this.innerHTML = `
-          ${file.name}
-          <button id="previewImageBtn" class="holo-button" style="margin-top: 10px; padding: 5px 10px; font-size: 0.8rem;">
-            Preview Image
-          </button>
-        `;
-        
-        // Set preview button
-        document.getElementById('previewImageBtn').addEventListener('click', function(e) {
-          e.stopPropagation();
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            previewImage.src = e.target.result;
-            previewContainer.style.display = 'flex';
-          };
-          reader.readAsDataURL(file);
-        });
-        
-        // Update face
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          faceElement.style.backgroundImage = `url('${e.target.result}')`;
-        };
-        reader.readAsDataURL(file);
-        
-        checkDeployStatus();
-      }
-    });
-
-    // Deploy button
-    deployButton.addEventListener('click', function() {
-      this.innerHTML = 'UPLOADING... <div class="loading-ring"></div>';
-      this.disabled = true;
       
-      setTimeout(() => {
-        this.textContent = 'DEPLOYED SUCCESSFULLY';
-        
+      // Show notification
+      function showNotification() {
+        notification.classList.add('show');
         setTimeout(() => {
-          alert('Token deployment simulation completed!');
-        }, 1000);
-      }, 2000);
+          notification.classList.remove('show');
+        }, 5000);
+      }
+      
+      // Toggle audio play/pause
+      toggleBtn.addEventListener('click', function() {
+        if (audio.paused) {
+          audio.play();
+          toggleBtn.textContent = 'PAUSE AUDIO';
+          if (!audioContext) setupAudioContext();
+        } else {
+          audio.pause();
+          toggleBtn.textContent = 'PLAY AUDIO';
+        }
+      });
+      
+      // Start playing audio
+      playAudio();
     });
   </script>
 </body>
