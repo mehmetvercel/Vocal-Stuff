@@ -604,99 +604,159 @@
       }
     });
 
-    // Speech recognition function from provided example
-    function initSpeechRecognition(targetBox, textTarget, isTicker = false) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      
-      if (!SpeechRecognition) {
-        console.log("Speech recognition not supported");
-        // Instead of showing error, allow text input
-        targetBox.innerHTML = `<input type="text" placeholder="${isTicker ? 'Enter Ticker' : 'Enter Token Name'}" style="padding: 8px; width: 80%; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--primary-color); border-radius: 4px;">`;
-        
-        const input = targetBox.querySelector('input');
-        input.addEventListener('input', () => {
-          textTarget.textContent = isTicker ? input.value.toUpperCase() : input.value || "N/A";
-          checkDeployStatus();
+    // Direct copy of the working speech recognition code from the provided file
+    function addTypeInsteadOption(box, callback) {
+      if (!box.querySelector('.type-instead')) {
+        const typeLink = document.createElement('div');
+        typeLink.className = 'type-instead';
+        typeLink.textContent = 'Type instead';
+        typeLink.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (callback) callback(e);
         });
+        box.appendChild(typeLink);
+      }
+    }
+
+    function setupSpeechBox(box, textTarget, isTicker = false) {
+      // Add type instead option
+      addTypeInsteadOption(box, function() {
+        showTextInput(box, textTarget, isTicker);
+      });
+      
+      box.addEventListener('click', function(e) {
+        if (e.target.classList.contains('type-instead') || box.querySelector('input')) return;
+        startListening(box, textTarget, isTicker);
+      });
+    }
+
+    function showTextInput(box, textTarget, isTicker) {
+      const currentValue = textTarget.textContent !== "N/A" ? textTarget.textContent : "";
+      box.innerHTML = `<input type="text" placeholder="${isTicker ? 'Enter Ticker' : 'Enter Token Name'}" style="padding: 8px; width: 80%; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--primary-color); border-radius: 4px;" value="${currentValue}">`;
+      
+      const input = box.querySelector('input');
+      input.focus();
+      
+      input.addEventListener('input', function() {
+        textTarget.textContent = isTicker ? this.value.toUpperCase() : this.value || "N/A";
+        checkDeployStatus();
+      });
+    }
+
+    // Global variables to track speech recognition instances
+    let tokenRecognition = null;
+    let tickerRecognition = null;
+
+    function startListening(box, textTarget, isTicker) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        showTextInput(box, textTarget, isTicker);
         return;
       }
-
-      // Add a "type instead" option
-      const originalContent = targetBox.innerHTML;
-      targetBox.innerHTML = `${originalContent}<div class="type-instead">Type instead</div>`;
       
-      targetBox.querySelector('.type-instead').addEventListener('click', function(e) {
-        e.stopPropagation(); // Prevent bubbling to parent click
-        showTypeInput();
-      });
-      
-      function showTypeInput() {
-        const currentValue = textTarget.textContent !== "N/A" ? textTarget.textContent : "";
-        targetBox.innerHTML = `<input type="text" placeholder="${isTicker ? 'Enter Ticker' : 'Enter Token Name'}" style="padding: 8px; width: 80%; background: rgba(0,0,0,0.2); color: white; border: 1px solid var(--primary-color); border-radius: 4px;" value="${currentValue}">`;
-        
-        const input = targetBox.querySelector('input');
-        input.focus();
-        
-        input.addEventListener('input', function() {
-          textTarget.textContent = isTicker ? this.value.toUpperCase() : this.value || "N/A";
-          checkDeployStatus();
-        });
-      }
-
+      // Create a new instance of SpeechRecognition
       const recognition = new SpeechRecognition();
+      
+      // Store the instance in the appropriate variable
+      if (isTicker) {
+        // Cancel any existing ticker recognition
+        if (tickerRecognition) {
+          try {
+            tickerRecognition.abort();
+          } catch (e) {}
+        }
+        tickerRecognition = recognition;
+      } else {
+        // Cancel any existing token recognition
+        if (tokenRecognition) {
+          try {
+            tokenRecognition.abort();
+          } catch (e) {}
+        }
+        tokenRecognition = recognition;
+      }
+      
       recognition.lang = 'en-US';
       recognition.interimResults = false;
-
-      targetBox.addEventListener('click', function(e) {
-        // Don't trigger if clicking on the type-instead link
-        if (e.target.classList.contains('type-instead')) return;
-        
-        // Don't trigger if already contains an input
-        if (targetBox.querySelector('input')) return;
-        
-        const originalText = targetBox.textContent.replace('Type instead', '').trim();
-        targetBox.innerHTML = "Listening...";
-        recognition.start();
-      });
-
+      recognition.maxAlternatives = 1;
+      
+      // Update UI to show we're listening
+      const originalContent = box.innerHTML;
+      box.innerHTML = "Listening...";
+      
+      // Add event handlers
       recognition.onresult = function(event) {
         let result = event.results[0][0].transcript.trim();
+        console.log("Recognition result:", result);
+        
         if (isTicker) {
-          result = result.split(' ')[0]; // only first word
-          result = result.toUpperCase();
+          // For ticker, use only the first word, convert to uppercase
+          result = result.split(' ')[0].toUpperCase();
         }
         
         textTarget.textContent = result || "N/A";
-        targetBox.innerHTML = `${result || (isTicker ? "Say A Ticker" : "Say A Token Name")}<div class="type-instead">Type instead</div>`;
+        box.textContent = result || (isTicker ? "Say A Ticker" : "Say A Token Name");
         
-        targetBox.querySelector('.type-instead').addEventListener('click', function(e) {
-          e.stopPropagation();
-          showTypeInput();
+        // Re-add the type instead option
+        addTypeInsteadOption(box, function() {
+          showTextInput(box, textTarget, isTicker);
         });
         
         checkDeployStatus();
       };
-
-      recognition.onerror = function() {
-        targetBox.innerHTML = `Try Again<div class="type-instead">Type instead</div>`;
+      
+      recognition.onerror = function(event) {
+        console.error("Speech recognition error:", event.error);
+        box.textContent = "Try Again";
         
-        targetBox.querySelector('.type-instead').addEventListener('click', function(e) {
-          e.stopPropagation();
-          showTypeInput();
+        // Re-add the type instead option
+        addTypeInsteadOption(box, function() {
+          showTextInput(box, textTarget, isTicker);
         });
+        
+        // Clear the recognition instance
+        if (isTicker) {
+          tickerRecognition = null;
+        } else {
+          tokenRecognition = null;
+        }
       };
       
       recognition.onend = function() {
-        if (targetBox.textContent === "Listening...") {
-          targetBox.innerHTML = `${isTicker ? "Say A Ticker" : "Say A Token Name"}<div class="type-instead">Type instead</div>`;
+        console.log("Speech recognition ended");
+        if (box.textContent === "Listening...") {
+          box.textContent = isTicker ? "Say A Ticker" : "Say A Token Name";
           
-          targetBox.querySelector('.type-instead').addEventListener('click', function(e) {
-            e.stopPropagation();
-            showTypeInput();
+          // Re-add the type instead option
+          addTypeInsteadOption(box, function() {
+            showTextInput(box, textTarget, isTicker);
           });
         }
+        
+        // Clear the recognition instance
+        if (isTicker) {
+          tickerRecognition = null;
+        } else {
+          tokenRecognition = null;
+        }
       };
+      
+      // Start recognition
+      try {
+        recognition.start();
+        console.log("Speech recognition started");
+      } catch (e) {
+        console.error("Failed to start speech recognition:", e);
+        box.innerHTML = originalContent;
+        
+        // Show text input as fallback
+        showTextInput(box, textTarget, isTicker);
+      }
     }
+
+    // Set up the speech boxes
+    setupSpeechBox(coinBox, coinText, false);
+    setupSpeechBox(tickerBox, tickerText, true);
 
     // Check deploy status
     function checkDeployStatus() {
@@ -706,10 +766,6 @@
         imageText.textContent !== 'N/A'
       );
     }
-
-    // Initialize speech recognition for token and ticker
-    initSpeechRecognition(coinBox, coinText, false);
-    initSpeechRecognition(tickerBox, tickerText, true);
 
     // Image handling
     imageSelectBtn.addEventListener('click', function(e) {
@@ -796,38 +852,4 @@
         // Set preview button
         document.getElementById('previewImageBtn').addEventListener('click', function(e) {
           e.stopPropagation();
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            previewImage.src = e.target.result;
-            previewContainer.style.display = 'flex';
-          };
-          reader.readAsDataURL(file);
-        });
-        
-        // Update face
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          faceElement.style.backgroundImage = `url('${e.target.result}')`;
-        };
-        reader.readAsDataURL(file);
-        
-        checkDeployStatus();
-      }
-    });
-
-    // Deploy button
-    deployButton.addEventListener('click', function() {
-      this.innerHTML = 'UPLOADING... <div class="loading-ring"></div>';
-      this.disabled = true;
-      
-      setTimeout(() => {
-        this.textContent = 'DEPLOYED SUCCESSFULLY';
-        
-        setTimeout(() => {
-          alert('Token deployment simulation completed!');
-        }, 1000);
-      }, 2000);
-    });
-  </script>
-</body>
-</html>
+          const reader = new FileReader
